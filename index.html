@@ -6,429 +6,447 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000010">
-  <title>Élio dans Sonic 2</title>
+  <title>Élio — Game Room</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { width:100%; height:100%; overflow:hidden; background:#000010; touch-action:none; }
 
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: #000010;
-      font-family: sans-serif;
-      touch-action: none;
+    /* ══════════════════════════════
+       MENU SÉLECTION
+    ══════════════════════════════ */
+    #menu {
+      position:fixed; inset:0; z-index:100;
+      display:flex; flex-direction:column;
+      background:#000010;
+      overflow-y:auto; overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
+      touch-action:pan-y;
     }
 
-    /* ────────────────────────────
-       SPLASH SCREEN
-    ──────────────────────────── */
-    #splash {
-      position: fixed; inset: 0; z-index: 100;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-end;
-      background: #000010;
-      overflow: hidden;
-    }
-
-    #splash-bg {
-      position: absolute; inset: 0;
+    /* Fond poster */
+    #menu-bg {
+      position:fixed; inset:0; z-index:0;
       background-image: url('poster.jpg');
       background-size: cover;
-      background-position: center top;
-      filter: brightness(0.85);
+      background-position: center 20%;
+      filter: brightness(0.35) blur(2px);
+    }
+    #menu-bg::after {
+      content:'';
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(0,0,16,0.3) 0%, rgba(0,0,16,0.85) 60%, #000010 100%);
     }
 
-    /* Fallback gradient si pas d'image */
-    #splash-bg::before {
-      content: '';
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse at 30% 40%, rgba(0,100,255,0.5) 0%, transparent 60%),
-        radial-gradient(ellipse at 70% 30%, rgba(200,0,50,0.4) 0%, transparent 60%),
-        linear-gradient(180deg, #000820 0%, #000010 100%);
+    /* Header */
+    .menu-header {
+      position:relative; z-index:1;
+      text-align:center;
+      padding: 36px 20px 12px;
+      flex-shrink:0;
     }
 
-    #splash-bg::after {
-      content: '';
-      position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
-      background: linear-gradient(to bottom, transparent, #000010);
+    .title-elio {
+      font-size: clamp(38px,14vw,64px);
+      font-weight:900; font-style:italic;
+      letter-spacing:3px;
+      color:#fff;
+      text-shadow: 0 0 20px #0060ff, 0 0 50px #0040cc, 3px 3px 0 #00008b;
+      line-height:1;
+    }
+    .title-sub {
+      font-size: clamp(10px,3.5vw,16px);
+      font-weight:700; letter-spacing:5px;
+      color:#4fc3f7;
+      text-shadow:0 0 10px #4fc3f7;
+      margin-top:4px;
+    }
+    .title-room {
+      font-size: clamp(14px,5vw,22px);
+      font-weight:900; letter-spacing:2px;
+      color:#FFD700;
+      text-shadow:0 0 15px #ffd700;
+      margin-top:2px;
     }
 
-    .splash-content {
-      position: relative; z-index: 2;
-      text-align: center;
-      padding-bottom: max(40px, env(safe-area-inset-bottom, 40px));
-      width: 100%;
+    /* Grille jeux */
+    .games-grid {
+      position:relative; z-index:1;
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(160px, 42vw), 1fr));
+      gap:14px;
+      padding:20px 16px max(32px, env(safe-area-inset-bottom, 32px));
+      flex:1;
     }
 
-    .splash-title {
-      font-size: clamp(48px, 18vw, 80px);
-      font-weight: 900;
-      font-style: italic;
-      letter-spacing: 4px;
-      color: #fff;
-      text-shadow:
-        0 0 20px #0060ff,
-        0 0 40px #0040cc,
-        3px 3px 0 #00008b,
-        -1px -1px 0 #0080ff;
-      line-height: 1;
+    .game-card {
+      border-radius:16px;
+      overflow:hidden;
+      cursor:pointer;
+      position:relative;
+      background:rgba(255,255,255,0.05);
+      border:2px solid rgba(255,255,255,0.1);
+      transition:transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+      touch-action:manipulation;
+      aspect-ratio: 3/4;
+      display:flex; flex-direction:column;
+    }
+    .game-card:active { transform:scale(0.94); }
+
+    /* Couleur par jeu */
+    .game-card[data-id="sonic1"]    { --c1:#0044ff; --c2:#00aaff; }
+    .game-card[data-id="sonic2"]    { --c1:#0066ff; --c2:#FFD700; }
+    .game-card[data-id="triple"]    { --c1:#8800ff; --c2:#ff00cc; }
+    .game-card[data-id="ecco"]      { --c1:#00668b; --c2:#00eeff; }
+    .game-card[data-id="streets"]   { --c1:#aa0000; --c2:#ff4400; }
+
+    .game-card-art {
+      flex:1;
+      background: linear-gradient(135deg, var(--c1), var(--c2));
+      display:flex; align-items:center; justify-content:center;
+      font-size:clamp(44px,12vw,64px);
+      position:relative;
+      overflow:hidden;
+    }
+    .game-card-art::before {
+      content:'';
+      position:absolute; inset:0;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 60%);
+    }
+    .game-card-art::after {
+      content:'';
+      position:absolute; bottom:0; left:0; right:0; height:40%;
+      background:linear-gradient(transparent, rgba(0,0,0,0.5));
     }
 
-    .splash-dans {
-      font-size: clamp(14px, 5vw, 22px);
-      font-weight: 700;
-      letter-spacing: 8px;
-      color: #aac8ff;
-      text-shadow: 0 0 10px #4488ff;
-      margin-bottom: 4px;
+    .game-card-info {
+      padding:10px 10px 12px;
+      background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(4px);
+    }
+    .game-card-title {
+      font-size:clamp(10px,3vw,13px);
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+      letter-spacing:0.3px;
+    }
+    .game-card-system {
+      font-size:9px;
+      color:rgba(255,255,255,0.45);
+      margin-top:3px;
+      letter-spacing:1px;
+      text-transform:uppercase;
     }
 
-    .splash-sonic {
-      font-size: clamp(32px, 12vw, 56px);
-      font-weight: 900;
-      font-style: italic;
-      letter-spacing: 3px;
-      color: #0af;
-      text-shadow:
-        0 0 15px #00aaff,
-        0 0 40px #0055ff,
-        3px 3px 0 #003399;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+    .play-badge {
+      position:absolute; top:8px; right:8px; z-index:2;
+      width:28px; height:28px;
+      border-radius:50%;
+      background:rgba(0,0,0,0.5);
+      border:1.5px solid rgba(255,255,255,0.3);
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px;
+      color:rgba(255,255,255,0.7);
     }
 
-    .splash-sonic .num2 {
-      color: #FFD700;
-      text-shadow: 0 0 15px #ffd700, 0 0 30px #ff8800, 2px 2px 0 #8b6000;
-    }
-
-    .splash-sub {
-      font-size: clamp(9px, 3vw, 14px);
-      letter-spacing: 5px;
-      color: #88aacc;
-      margin-top: 4px;
-      text-transform: uppercase;
-    }
-
-    .tap-to-play {
-      margin-top: 28px;
-      font-size: clamp(11px, 3.5vw, 16px);
-      font-weight: 700;
-      letter-spacing: 3px;
-      color: #fff;
-      text-transform: uppercase;
-      animation: blink 1.4s ease-in-out infinite;
-      text-shadow: 0 0 15px #00aaff;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-
-    /* Lightning effect */
-    .lightning {
-      position: absolute; inset: 0; z-index: 1;
-      background: linear-gradient(135deg, transparent 40%, rgba(0,120,255,0.05) 50%, transparent 60%);
-      animation: lightning 3s ease-in-out infinite;
-    }
-    @keyframes lightning {
-      0%, 90%, 100% { opacity: 0; }
-      92%, 94% { opacity: 1; }
-    }
-
-    /* ────────────────────────────
-       GAME LAYOUT
-    ──────────────────────────── */
+    /* ══════════════════════════════
+       ÉCRAN JEU
+    ══════════════════════════════ */
     #app {
-      display: none;
-      flex-direction: column;
-      width: 100%; height: 100%;
-      background: #000;
+      display:none; flex-direction:column;
+      width:100%; height:100%;
+      background:#000;
     }
+    #app.visible { display:flex; }
 
-    #app.visible { display: flex; }
-
-    /* Petite barre titre */
     #topbar {
-      position: relative;
-      background: linear-gradient(90deg, #000820, #001040, #000820);
-      border-bottom: 2px solid rgba(0,150,255,0.3);
-      padding: 6px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-      z-index: 10;
+      position:relative; z-index:10;
+      background:linear-gradient(90deg,#000820,#001040,#000820);
+      border-bottom:2px solid rgba(0,150,255,0.3);
+      padding:6px 12px;
+      display:flex; align-items:center; gap:10px;
+      flex-shrink:0;
+    }
+    #back-btn {
+      width:28px; height:28px;
+      border-radius:6px;
+      background:rgba(0,80,200,0.4);
+      border:1px solid rgba(0,150,255,0.5);
+      color:rgba(255,255,255,0.7);
+      font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; flex-shrink:0;
+    }
+    #game-title-bar {
+      flex:1;
+      font-size:11px; font-weight:900; font-style:italic;
+      letter-spacing:2px;
+      background:linear-gradient(90deg,#0af,#FFD700);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .player-name {
+      font-size:10px; font-weight:700;
+      color:#FFD700; text-shadow:0 0 8px #ffd700;
+      letter-spacing:1px; flex-shrink:0;
     }
 
-    #topbar .game-title {
-      font-size: 11px; font-weight: 900; font-style: italic;
-      letter-spacing: 2px;
-      background: linear-gradient(90deg, #0af, #FFD700);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-
-    #topbar .player-name {
-      font-size: 10px; font-weight: 700;
-      color: #FFD700;
-      text-shadow: 0 0 8px #ffd700;
-      letter-spacing: 1px;
-    }
-
-    /* Zone émulateur */
     #emu-wrapper {
-      flex: 1;
-      position: relative;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
-      background: #000;
+      flex:1; position:relative;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; background:#000;
     }
+    #game { width:100%; height:100%; display:block; }
 
-    #game {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    /* ────────────────────────────
-       MANETTE TACTILE
-    ──────────────────────────── */
+    /* ── Manette ── */
     #ctrl {
-      position: absolute; inset: 0; z-index: 20;
-      pointer-events: none;
+      position:absolute; inset:0; z-index:20;
+      pointer-events:none;
     }
-
-    /* ── D-PAD gauche ── */
     #dpad {
-      position: absolute;
-      bottom: max(18px, env(safe-area-inset-bottom, 18px));
-      left: 16px;
-      display: flex; gap: 8px;
-      pointer-events: none;
+      position:absolute;
+      bottom:max(18px, env(safe-area-inset-bottom,18px));
+      left:16px;
+      display:flex; gap:8px;
+      pointer-events:none;
     }
-
     .dpad-btn {
-      width: 72px; height: 72px;
-      border-radius: 16px;
-      background: rgba(0, 120, 255, 0.18);
-      border: 2px solid rgba(0, 180, 255, 0.45);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-      color: rgba(255,255,255,0.55);
-      pointer-events: all;
-      user-select: none;
-      -webkit-user-select: none;
-      transition: background 0.08s, transform 0.08s, border-color 0.08s;
-      touch-action: none;
-      cursor: pointer;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      width:72px; height:72px;
+      border-radius:16px;
+      background:rgba(0,120,255,0.18);
+      border:2px solid rgba(0,180,255,0.45);
+      display:flex; align-items:center; justify-content:center;
+      font-size:28px; color:rgba(255,255,255,0.55);
+      pointer-events:all; user-select:none; -webkit-user-select:none;
+      touch-action:none; cursor:pointer;
+      transition:background .08s,transform .08s,border-color .08s;
+      box-shadow:0 2px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1);
     }
-
     .dpad-btn.pressed {
-      background: rgba(0, 160, 255, 0.55);
-      border-color: rgba(0, 220, 255, 0.9);
-      color: #fff;
-      transform: scale(0.92);
-      box-shadow: 0 0 20px rgba(0,180,255,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+      background:rgba(0,160,255,.55); border-color:rgba(0,220,255,.9);
+      color:#fff; transform:scale(.92);
+      box-shadow:0 0 20px rgba(0,180,255,.6),inset 0 1px 0 rgba(255,255,255,.2);
     }
-
-    /* ── Boutons action droite ── */
     #action-btns {
-      position: absolute;
-      bottom: max(18px, env(safe-area-inset-bottom, 18px));
-      right: 16px;
-      display: flex; flex-direction: column;
-      align-items: flex-end;
-      gap: 10px;
-      pointer-events: none;
+      position:absolute;
+      bottom:max(18px,env(safe-area-inset-bottom,18px));
+      right:16px;
+      display:flex; flex-direction:column; align-items:flex-end; gap:10px;
+      pointer-events:none;
     }
-
     #btn-start {
-      width: 56px; height: 32px;
-      border-radius: 16px;
-      background: rgba(255, 200, 0, 0.15);
-      border: 2px solid rgba(255, 215, 0, 0.45);
-      color: rgba(255, 215, 0, 0.7);
-      font-size: 9px; font-weight: 900;
-      letter-spacing: 1px; text-transform: uppercase;
-      display: flex; align-items: center; justify-content: center;
-      pointer-events: all;
-      user-select: none; -webkit-user-select: none;
-      touch-action: none; cursor: pointer;
-      transition: background 0.08s, transform 0.08s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      width:56px; height:32px; border-radius:16px;
+      background:rgba(255,200,0,.15); border:2px solid rgba(255,215,0,.45);
+      color:rgba(255,215,0,.7); font-size:9px; font-weight:900;
+      letter-spacing:1px; text-transform:uppercase;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:all; user-select:none; -webkit-user-select:none;
+      touch-action:none; cursor:pointer;
+      transition:background .08s,transform .08s;
+      box-shadow:0 2px 8px rgba(0,0,0,.4);
     }
     #btn-start.pressed {
-      background: rgba(255, 215, 0, 0.45);
-      border-color: #FFD700;
-      color: #fff;
-      transform: scale(0.92);
-      box-shadow: 0 0 16px rgba(255,215,0,0.5);
+      background:rgba(255,215,0,.45); border-color:#FFD700;
+      color:#fff; transform:scale(.92);
+      box-shadow:0 0 16px rgba(255,215,0,.5);
     }
-
     #btn-jump {
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      background: rgba(0, 200, 80, 0.18);
-      border: 3px solid rgba(0, 230, 100, 0.5);
-      color: rgba(255,255,255,0.7);
-      font-size: 32px;
-      display: flex; align-items: center; justify-content: center;
-      pointer-events: all;
-      user-select: none; -webkit-user-select: none;
-      touch-action: none; cursor: pointer;
-      transition: background 0.08s, transform 0.08s, border-color 0.08s;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+      width:80px; height:80px; border-radius:50%;
+      background:rgba(0,200,80,.18); border:3px solid rgba(0,230,100,.5);
+      color:rgba(255,255,255,.7); font-size:32px;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:all; user-select:none; -webkit-user-select:none;
+      touch-action:none; cursor:pointer;
+      transition:background .08s,transform .08s,border-color .08s;
+      box-shadow:0 2px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);
     }
     #btn-jump.pressed {
-      background: rgba(0, 230, 100, 0.55);
-      border-color: rgba(0, 255, 120, 0.9);
-      color: #fff;
-      transform: scale(0.9);
-      box-shadow: 0 0 24px rgba(0,230,100,0.6);
+      background:rgba(0,230,100,.55); border-color:rgba(0,255,120,.9);
+      color:#fff; transform:scale(.9);
+      box-shadow:0 0 24px rgba(0,230,100,.6);
     }
-
-    /* Bouton plein écran */
     #fs-btn {
-      position: absolute; top: 8px; right: 12px; z-index: 50;
-      width: 32px; height: 32px;
-      background: rgba(0,80,200,0.4);
-      border: 1px solid rgba(0,150,255,0.5);
-      border-radius: 6px;
-      color: rgba(255,255,255,0.6);
-      font-size: 14px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      pointer-events: all;
+      position:absolute; top:8px; right:12px; z-index:50;
+      width:32px; height:32px;
+      background:rgba(0,80,200,.4); border:1px solid rgba(0,150,255,.5);
+      border-radius:6px; color:rgba(255,255,255,.6); font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; pointer-events:all;
     }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════
-     SPLASH SCREEN
-══════════════════════════════════ -->
-<div id="splash">
-  <div id="splash-bg"></div>
-  <div class="lightning"></div>
+<!-- ══════════════════════════════
+     MENU SÉLECTION
+══════════════════════════════ -->
+<div id="menu">
+  <div id="menu-bg"></div>
 
-  <div class="splash-content">
-    <div class="splash-dans">ÉLIO DANS</div>
-    <div class="splash-title">SONIC</div>
-    <div class="splash-sonic">THE HEDGEHOG <span class="num2">2</span></div>
-    <div class="splash-sub">Game Gear • 1992</div>
-    <div class="tap-to-play">▶ &nbsp; APPUIE POUR JOUER &nbsp; ◀</div>
+  <div class="menu-header">
+    <div class="title-elio">ÉLIO</div>
+    <div class="title-sub">★ GAME ROOM ★</div>
+    <div class="title-room">Choisis ton jeu</div>
+  </div>
+
+  <div class="games-grid">
+
+    <div class="game-card" data-id="sonic1" data-rom="rom/Sonic the Hedgehog.gg" data-title="Sonic the Hedgehog">
+      <div class="game-card-art">🦔</div>
+      <div class="play-badge">▶</div>
+      <div class="game-card-info">
+        <div class="game-card-title">Sonic the Hedgehog</div>
+        <div class="game-card-system">Game Gear • 1991</div>
+      </div>
+    </div>
+
+    <div class="game-card" data-id="sonic2" data-rom="rom/Sonic the Hedgehog 2.gg" data-title="Sonic the Hedgehog 2">
+      <div class="game-card-art">⚡</div>
+      <div class="play-badge">▶</div>
+      <div class="game-card-info">
+        <div class="game-card-title">Sonic the Hedgehog 2</div>
+        <div class="game-card-system">Game Gear • 1992</div>
+      </div>
+    </div>
+
+    <div class="game-card" data-id="triple" data-rom="rom/Sonic the Hedgehog - Triple Trouble.gg" data-title="Sonic Triple Trouble">
+      <div class="game-card-art">🌀</div>
+      <div class="play-badge">▶</div>
+      <div class="game-card-info">
+        <div class="game-card-title">Sonic Triple Trouble</div>
+        <div class="game-card-system">Game Gear • 1994</div>
+      </div>
+    </div>
+
+    <div class="game-card" data-id="ecco" data-rom="rom/Ecco the Dolphin 2 - Tthe Tides of Time.gg" data-title="Ecco the Dolphin 2">
+      <div class="game-card-art">🐬</div>
+      <div class="play-badge">▶</div>
+      <div class="game-card-info">
+        <div class="game-card-title">Ecco the Dolphin 2</div>
+        <div class="game-card-system">Game Gear • 1995</div>
+      </div>
+    </div>
+
+    <div class="game-card" data-id="streets" data-rom="rom/Streets of Rage 2.gg" data-title="Streets of Rage 2">
+      <div class="game-card-art">👊</div>
+      <div class="play-badge">▶</div>
+      <div class="game-card-info">
+        <div class="game-card-title">Streets of Rage 2</div>
+        <div class="game-card-system">Game Gear • 1993</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- ══════════════════════════════════
-     APP
-══════════════════════════════════ -->
+<!-- ══════════════════════════════
+     ÉCRAN JEU
+══════════════════════════════ -->
 <div id="app">
-
   <div id="topbar">
-    <span class="game-title">SONIC 2</span>
+    <div id="back-btn" title="Menu">←</div>
+    <div id="game-title-bar">SONIC 2</div>
     <span class="player-name">⭐ ÉLIO</span>
   </div>
-
   <div id="emu-wrapper">
-
-    <!-- Émulateur -->
     <div id="game"></div>
-
-    <!-- Manette tactile -->
     <div id="ctrl">
-      <!-- D-pad gauche -->
       <div id="dpad">
         <div class="dpad-btn" id="btn-left">◀</div>
         <div class="dpad-btn" id="btn-right">▶</div>
       </div>
-      <!-- Boutons action droite -->
       <div id="action-btns">
         <div id="btn-start">START</div>
         <div id="btn-jump">🔵</div>
       </div>
     </div>
-
-    <!-- Bouton plein écran -->
     <div id="fs-btn" title="Plein écran">⛶</div>
-
   </div>
 </div>
 
-<!-- ══════════════════════════════════
-     SCRIPTS
-══════════════════════════════════ -->
 <script>
-// ── EmulatorJS config (défini AVANT le loader) ──────────────────────
-window.EJS_player        = '#game';
-window.EJS_core          = 'smsplus';
-window.EJS_gameUrl       = 'rom/Sonic the Hedgehog 2.gg';
+// ── Config EmulatorJS ────────────────────────────────────────────
 window.EJS_pathtodata    = './data/';
 window.EJS_startOnLoaded = true;
 window.EJS_color         = '#0088ff';
 window.EJS_backgroundColor = '#000010';
 window.EJS_adUrl         = '';
 window.EJS_Buttons = {
-  playPause: false, restart: true, mute: true,
-  settings: true, fullscreen: false,
-  saveState: true, loadState: true,
-  gamepad: false, cheat: false
+  playPause:false, restart:true, mute:true,
+  settings:true, fullscreen:false,
+  saveState:true, loadState:true,
+  gamepad:false, cheat:false
 };
 
-// ── Splash → lancer le jeu ──────────────────────────────────────────
-const splash   = document.getElementById('splash');
-const app      = document.getElementById('app');
-let   gameStarted = false;
+// ── Sélection de jeu ─────────────────────────────────────────────
+const menu    = document.getElementById('menu');
+const app     = document.getElementById('app');
+const titleBar = document.getElementById('game-title-bar');
 
-function startGame() {
-  if (gameStarted) return;
-  gameStarted = true;
+let emuLoaded = false;
 
-  // Transition
-  splash.style.transition = 'opacity 0.6s';
-  splash.style.opacity = '0';
+document.querySelectorAll('.game-card').forEach(card => {
+  card.addEventListener('click', () => launchGame(
+    card.dataset.rom,
+    card.dataset.title
+  ));
+  card.addEventListener('touchend', e => {
+    e.preventDefault();
+    launchGame(card.dataset.rom, card.dataset.title);
+  }, { passive:false });
+});
+
+function launchGame(romUrl, title) {
+  // Config EmulatorJS pour ce jeu
+  window.EJS_core    = 'smsplus';
+  window.EJS_gameUrl = romUrl;
+  window.EJS_player  = '#game';
+
+  titleBar.textContent = title;
+
+  // Transition menu → jeu
+  menu.style.transition = 'opacity .4s';
+  menu.style.opacity = '0';
   setTimeout(() => {
-    splash.style.display = 'none';
+    menu.style.display = 'none';
     app.classList.add('visible');
 
-    // Charge EmulatorJS maintenant
-    const s = document.createElement('script');
-    s.src = './data/loader.js';
-    document.body.appendChild(s);
-  }, 600);
+    if (!emuLoaded) {
+      emuLoaded = true;
+      const s = document.createElement('script');
+      s.src = './data/loader.js';
+      document.body.appendChild(s);
+    } else {
+      // Changer de ROM sans recharger le moteur
+      if (window.EJS_emulator) {
+        window.EJS_emulator.changeGame(romUrl).catch(()=>{});
+      }
+    }
+  }, 400);
 }
 
-splash.addEventListener('click',     startGame);
-splash.addEventListener('touchstart', startGame, { passive: true });
+// ── Bouton retour ────────────────────────────────────────────────
+document.getElementById('back-btn').addEventListener('click', () => {
+  app.classList.remove('visible');
+  menu.style.display = '';
+  menu.style.opacity = '0';
+  setTimeout(() => { menu.style.transition='opacity .3s'; menu.style.opacity='1'; }, 10);
+});
 
-// ── Contrôles tactiles ────────────────────────────────────────────
-function pressKey(key)  { document.dispatchEvent(new KeyboardEvent('keydown', { key, code: key, keyCode: keyCode(key), bubbles: true, cancelable: true })); }
-function releaseKey(key){ document.dispatchEvent(new KeyboardEvent('keyup',   { key, code: key, keyCode: keyCode(key), bubbles: true, cancelable: true })); }
-function keyCode(key) {
-  return { ArrowLeft:37, ArrowRight:39, ArrowUp:38, ArrowDown:40, z:90, Enter:13 }[key] ?? 0;
-}
-function tapKey(key, ms = 100) { pressKey(key); setTimeout(() => releaseKey(key), ms); }
+// ── Contrôles tactiles ───────────────────────────────────────────
+function pressKey(key)  { document.dispatchEvent(new KeyboardEvent('keydown',{key,code:key,keyCode:kc(key),bubbles:true,cancelable:true})); }
+function releaseKey(key){ document.dispatchEvent(new KeyboardEvent('keyup',  {key,code:key,keyCode:kc(key),bubbles:true,cancelable:true})); }
+function kc(k){ return {ArrowLeft:37,ArrowRight:39,ArrowUp:38,ArrowDown:40,z:90,Enter:13}[k]??0; }
+function tapKey(key,ms=100){ pressKey(key); setTimeout(()=>releaseKey(key),ms); }
 
-// Binding bouton → touche
 const btnMap = {
-  'btn-left':  { down: () => pressKey('ArrowLeft'),  up: () => releaseKey('ArrowLeft')  },
-  'btn-right': { down: () => pressKey('ArrowRight'), up: () => releaseKey('ArrowRight') },
-  'btn-jump':  { down: () => tapKey('z', 120),       up: () => {}                       },
-  'btn-start': { down: () => tapKey('Enter', 80),    up: () => {}                       },
+  'btn-left':  { down:()=>pressKey('ArrowLeft'),   up:()=>releaseKey('ArrowLeft')  },
+  'btn-right': { down:()=>pressKey('ArrowRight'),  up:()=>releaseKey('ArrowRight') },
+  'btn-jump':  { down:()=>tapKey('z',120),         up:()=>{}                       },
+  'btn-start': { down:()=>tapKey('Enter',80),      up:()=>{}                       },
 };
 
-// Suivi multi-touch : quel bouton possède quel touch
-const touchOwner = new Map(); // touchId → btnId
-
-function btnDown(btnId) {
-  const el = document.getElementById(btnId);
-  if (el) el.classList.add('pressed');
-  btnMap[btnId]?.down();
-}
-function btnUp(btnId) {
-  const el = document.getElementById(btnId);
-  if (el) el.classList.remove('pressed');
-  btnMap[btnId]?.up();
-}
+const touchOwner = new Map();
 
 function getBtnFromTarget(el) {
   while (el && el !== document.body) {
@@ -437,47 +455,37 @@ function getBtnFromTarget(el) {
   }
   return null;
 }
+function btnDown(id){ document.getElementById(id)?.classList.add('pressed'); btnMap[id]?.down(); }
+function btnUp(id){   document.getElementById(id)?.classList.remove('pressed'); btnMap[id]?.up(); }
 
-document.getElementById('ctrl').addEventListener('touchstart', e => {
+const ctrl = document.getElementById('ctrl');
+ctrl.addEventListener('touchstart', e=>{
   e.preventDefault();
-  for (const t of e.changedTouches) {
-    const btn = getBtnFromTarget(t.target);
-    if (btn) { touchOwner.set(t.identifier, btn); btnDown(btn); }
+  for(const t of e.changedTouches){
+    const b = getBtnFromTarget(t.target);
+    if(b){ touchOwner.set(t.identifier,b); btnDown(b); }
   }
-}, { passive: false });
-
-document.getElementById('ctrl').addEventListener('touchend', e => {
+},{passive:false});
+ctrl.addEventListener('touchend', e=>{
   e.preventDefault();
-  for (const t of e.changedTouches) {
-    const btn = touchOwner.get(t.identifier);
-    if (btn) { btnUp(btn); touchOwner.delete(t.identifier); }
+  for(const t of e.changedTouches){
+    const b = touchOwner.get(t.identifier);
+    if(b){ btnUp(b); touchOwner.delete(t.identifier); }
   }
-}, { passive: false });
-
-document.getElementById('ctrl').addEventListener('touchcancel', e => {
-  for (const t of e.changedTouches) {
-    const btn = touchOwner.get(t.identifier);
-    if (btn) { btnUp(btn); touchOwner.delete(t.identifier); }
+},{passive:false});
+ctrl.addEventListener('touchcancel', e=>{
+  for(const t of e.changedTouches){
+    const b = touchOwner.get(t.identifier);
+    if(b){ btnUp(b); touchOwner.delete(t.identifier); }
   }
-}, { passive: false });
+},{passive:false});
 
 // ── Plein écran ──────────────────────────────────────────────────
-document.getElementById('fs-btn').addEventListener('click', () => {
+document.getElementById('fs-btn').addEventListener('click', ()=>{
   const el = document.documentElement;
-  if (!document.fullscreenElement) {
-    el.requestFullscreen?.() || el.webkitRequestFullscreen?.();
-  } else {
-    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
-  }
-});
-
-// Aller en plein écran au lancement sur mobile
-window.addEventListener('EJS_ready', () => {
-  if (window.innerWidth < 768) {
-    document.documentElement.requestFullscreen?.().catch(() => {});
-  }
+  if(!document.fullscreenElement) el.requestFullscreen?.() || el.webkitRequestFullscreen?.();
+  else document.exitFullscreen?.() || document.webkitExitFullscreen?.();
 });
 </script>
-
 </body>
 </html>
