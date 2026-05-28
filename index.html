@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000010">
+  <title>Élio dans Sonic 2</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000010;
+      font-family: sans-serif;
+      touch-action: none;
+    }
+
+    /* ────────────────────────────
+       SPLASH SCREEN
+    ──────────────────────────── */
+    #splash {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      background: #000010;
+      overflow: hidden;
+    }
+
+    #splash-bg {
+      position: absolute; inset: 0;
+      background-image: url('poster.jpg');
+      background-size: cover;
+      background-position: center top;
+      filter: brightness(0.85);
+    }
+
+    /* Fallback gradient si pas d'image */
+    #splash-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 40%, rgba(0,100,255,0.5) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 30%, rgba(200,0,50,0.4) 0%, transparent 60%),
+        linear-gradient(180deg, #000820 0%, #000010 100%);
+    }
+
+    #splash-bg::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+      background: linear-gradient(to bottom, transparent, #000010);
+    }
+
+    .splash-content {
+      position: relative; z-index: 2;
+      text-align: center;
+      padding-bottom: max(40px, env(safe-area-inset-bottom, 40px));
+      width: 100%;
+    }
+
+    .splash-title {
+      font-size: clamp(48px, 18vw, 80px);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 4px;
+      color: #fff;
+      text-shadow:
+        0 0 20px #0060ff,
+        0 0 40px #0040cc,
+        3px 3px 0 #00008b,
+        -1px -1px 0 #0080ff;
+      line-height: 1;
+    }
+
+    .splash-dans {
+      font-size: clamp(14px, 5vw, 22px);
+      font-weight: 700;
+      letter-spacing: 8px;
+      color: #aac8ff;
+      text-shadow: 0 0 10px #4488ff;
+      margin-bottom: 4px;
+    }
+
+    .splash-sonic {
+      font-size: clamp(32px, 12vw, 56px);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 3px;
+      color: #0af;
+      text-shadow:
+        0 0 15px #00aaff,
+        0 0 40px #0055ff,
+        3px 3px 0 #003399;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    .splash-sonic .num2 {
+      color: #FFD700;
+      text-shadow: 0 0 15px #ffd700, 0 0 30px #ff8800, 2px 2px 0 #8b6000;
+    }
+
+    .splash-sub {
+      font-size: clamp(9px, 3vw, 14px);
+      letter-spacing: 5px;
+      color: #88aacc;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .tap-to-play {
+      margin-top: 28px;
+      font-size: clamp(11px, 3.5vw, 16px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #fff;
+      text-transform: uppercase;
+      animation: blink 1.4s ease-in-out infinite;
+      text-shadow: 0 0 15px #00aaff;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    /* Lightning effect */
+    .lightning {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(135deg, transparent 40%, rgba(0,120,255,0.05) 50%, transparent 60%);
+      animation: lightning 3s ease-in-out infinite;
+    }
+    @keyframes lightning {
+      0%, 90%, 100% { opacity: 0; }
+      92%, 94% { opacity: 1; }
+    }
+
+    /* ────────────────────────────
+       GAME LAYOUT
+    ──────────────────────────── */
+    #app {
+      display: none;
+      flex-direction: column;
+      width: 100%; height: 100%;
+      background: #000;
+    }
+
+    #app.visible { display: flex; }
+
+    /* Petite barre titre */
+    #topbar {
+      position: relative;
+      background: linear-gradient(90deg, #000820, #001040, #000820);
+      border-bottom: 2px solid rgba(0,150,255,0.3);
+      padding: 6px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    #topbar .game-title {
+      font-size: 11px; font-weight: 900; font-style: italic;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #0af, #FFD700);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    #topbar .player-name {
+      font-size: 10px; font-weight: 700;
+      color: #FFD700;
+      text-shadow: 0 0 8px #ffd700;
+      letter-spacing: 1px;
+    }
+
+    /* Zone émulateur */
+    #emu-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #game {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ────────────────────────────
+       OVERLAY TACTILE (INVISIBLE)
+    ──────────────────────────── */
+    #touch-overlay {
+      position: absolute; inset: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 35% 30% 35%;
+      grid-template-rows: 1fr 45%;
+      pointer-events: none; /* zones actives via JS */
+    }
+
+    /* Zones visuelles (très subtiles) */
+    .touch-zone {
+      position: relative;
+      pointer-events: none;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    }
+
+    .zone-left  { grid-column: 1; grid-row: 2; }
+    .zone-mid   { grid-column: 2; grid-row: 2; }
+    .zone-right { grid-column: 3; grid-row: 2; }
+
+    .zone-hint {
+      font-size: 28px;
+      opacity: 0.18;
+      transition: opacity 0.1s, transform 0.1s;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .zone-left.active   .zone-hint,
+    .zone-mid.active    .zone-hint,
+    .zone-right.active  .zone-hint {
+      opacity: 0.7;
+      transform: scale(1.3);
+    }
+
+    /* Ripple press feedback */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(0, 180, 255, 0.35);
+      width: 80px; height: 80px;
+      margin-left: -40px; margin-top: -40px;
+      animation: ripple-anim 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple-anim {
+      from { transform: scale(0); opacity: 1; }
+      to   { transform: scale(3); opacity: 0; }
+    }
+
+    /* Guide gestes (disparaît après 4s) */
+    #gesture-guide {
+      position: absolute; inset: 0; z-index: 30;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+      pointer-events: none;
+      animation: fade-guide 0.4s ease 4s forwards;
+      background: linear-gradient(transparent 40%, rgba(0,0,20,0.8));
+    }
+    @keyframes fade-guide {
+      to { opacity: 0; }
+    }
+
+    .guide-row {
+      display: flex; gap: 20px;
+      align-items: flex-end;
+      justify-content: center;
+      width: 100%;
+      padding: 0 16px 12px;
+    }
+
+    .guide-item {
+      flex: 1; max-width: 120px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+    }
+
+    .guide-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 0 8px rgba(0,180,255,0.8));
+    }
+
+    .guide-label {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: rgba(255,255,255,0.75);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* Bouton fullscreen discret */
+    #fs-btn {
+      position: absolute; top: 8px; right: 12px; z-index: 50;
+      width: 32px; height: 32px;
+      background: rgba(0,80,200,0.4);
+      border: 1px solid rgba(0,150,255,0.5);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Indicateur Start */
+    #start-indicator {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 50;
+      font-size: 8px; font-weight: 700; letter-spacing: 1px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+    }
+    #start-indicator.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     SPLASH SCREEN
+══════════════════════════════════ -->
+<div id="splash">
+  <div id="splash-bg"></div>
+  <div class="lightning"></div>
+
+  <div class="splash-content">
+    <div class="splash-dans">ÉLIO DANS</div>
+    <div class="splash-title">SONIC</div>
+    <div class="splash-sonic">THE HEDGEHOG <span class="num2">2</span></div>
+    <div class="splash-sub">Game Gear • 1992</div>
+    <div class="tap-to-play">▶ &nbsp; APPUIE POUR JOUER &nbsp; ◀</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     APP
+══════════════════════════════════ -->
+<div id="app">
+
+  <div id="topbar">
+    <span class="game-title">SONIC 2</span>
+    <span class="player-name">⭐ ÉLIO</span>
+  </div>
+
+  <div id="emu-wrapper">
+
+    <!-- Émulateur -->
+    <div id="game"></div>
+
+    <!-- Overlay tactile -->
+    <div id="touch-overlay">
+      <div class="touch-zone zone-left"  id="zone-left">
+        <span class="zone-hint">◀</span>
+      </div>
+      <div class="touch-zone zone-mid"   id="zone-mid">
+        <span class="zone-hint">🔵</span>
+      </div>
+      <div class="touch-zone zone-right" id="zone-right">
+        <span class="zone-hint">▶</span>
+      </div>
+    </div>
+
+    <!-- Guide gestes (s'efface tout seul) -->
+    <div id="gesture-guide">
+      <div class="guide-row">
+        <div class="guide-item">
+          <div class="guide-icon">👈</div>
+          <div class="guide-label">Maintenir<br>gauche</div>
+        </div>
+        <div class="guide-item">
+          <div class="guide-icon">👆</div>
+          <div class="guide-label">Taper<br>= Saut</div>
+        </div>
+        <div class="guide-item">
+          <div class="guide-icon">👉</div>
+          <div class="guide-label">Maintenir<br>droite</div>
+        </div>
+      </div>
+      <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:2px;padding-bottom:4px">DOUBLE TAPE = START</div>
+    </div>
+
+    <!-- Indicateur START (flash) -->
+    <div id="start-indicator">▶ START ◀</div>
+
+    <!-- Bouton plein écran -->
+    <div id="fs-btn" title="Plein écran">⛶</div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCRIPTS
+══════════════════════════════════ -->
+<script>
+// ── EmulatorJS config (défini AVANT le loader) ──────────────────────
+window.EJS_player        = '#game';
+window.EJS_core          = 'gamegear';
+window.EJS_gameUrl       = 'rom/Sonic the Hedgehog 2.gg';
+window.EJS_pathtodata    = 'https://cdn.emulatorjs.org/stable/data/';
+window.EJS_startOnLoaded = true;
+window.EJS_color         = '#0088ff';
+window.EJS_backgroundColor = '#000010';
+window.EJS_adUrl         = '';
+window.EJS_Buttons = {
+  playPause: false, restart: true, mute: true,
+  settings: true, fullscreen: false,
+  saveState: true, loadState: true,
+  gamepad: false, cheat: false
+};
+
+// ── Splash → lancer le jeu ──────────────────────────────────────────
+const splash   = document.getElementById('splash');
+const app      = document.getElementById('app');
+let   gameStarted = false;
+
+function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
+
+  // Transition
+  splash.style.transition = 'opacity 0.6s';
+  splash.style.opacity = '0';
+  setTimeout(() => {
+    splash.style.display = 'none';
+    app.classList.add('visible');
+
+    // Charge EmulatorJS maintenant
+    const s = document.createElement('script');
+    s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+    document.body.appendChild(s);
+  }, 600);
+}
+
+splash.addEventListener('click',     startGame);
+splash.addEventListener('touchstart', startGame, { passive: true });
+
+// ── Contrôles tactiles ────────────────────────────────────────────
+const overlay   = document.getElementById('touch-overlay');
+const zoneL     = document.getElementById('zone-left');
+const zoneM     = document.getElementById('zone-mid');
+const zoneR     = document.getElementById('zone-right');
+const startInd  = document.getElementById('start-indicator');
+
+const W = () => window.innerWidth;
+
+// Map des touches actives
+const held = { left: false, right: false };
+
+function pressKey(key)   { document.dispatchEvent(new KeyboardEvent('keydown', { key, code: key, bubbles: true, cancelable: true })); }
+function releaseKey(key) { document.dispatchEvent(new KeyboardEvent('keyup',   { key, code: key, bubbles: true, cancelable: true })); }
+function tapKey(key, ms = 80) {
+  pressKey(key);
+  setTimeout(() => releaseKey(key), ms);
+}
+
+function holdLeft(on)  { if (held.left  === on) return; held.left  = on; on ? pressKey('ArrowLeft')  : releaseKey('ArrowLeft');  zoneL.classList.toggle('active', on); }
+function holdRight(on) { if (held.right === on) return; held.right = on; on ? pressKey('ArrowRight') : releaseKey('ArrowRight'); zoneR.classList.toggle('active', on); }
+function doJump()      { tapKey('z', 100); zoneM.classList.add('active'); setTimeout(() => zoneM.classList.remove('active'), 150); }
+function doStart()     { tapKey('Enter', 80); flashStart(); }
+
+function flashStart() {
+  startInd.classList.add('show');
+  setTimeout(() => startInd.classList.remove('show'), 700);
+}
+
+// Zone par x
+function zoneForX(x) {
+  const w = W();
+  if (x < w * 0.35) return 'left';
+  if (x > w * 0.65) return 'right';
+  return 'mid';
+}
+
+// Gestion multi-touch
+const touches = new Map(); // id → { zone, startTime, startX, startY }
+let   lastTapTime = 0;
+
+function onTouchStart(e) {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const zone = zoneForX(t.clientX);
+    const now  = Date.now();
+    touches.set(t.identifier, { zone, startTime: now, startX: t.clientX, startY: t.clientY });
+
+    if (zone === 'left')  holdLeft(true);
+    if (zone === 'right') holdRight(true);
+    // mid : on attend le touchend pour distinguer tap rapide
+    if (zone === 'mid') {
+      // double tap → start
+      if (now - lastTapTime < 320) {
+        lastTapTime = 0;
+        doStart();
+      }
+    }
+    spawnRipple(t.clientX, t.clientY);
+  }
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const info = touches.get(t.identifier);
+    if (!info) continue;
+    const newZone = zoneForX(t.clientX);
+    if (newZone !== info.zone) {
+      // Quitter ancienne zone
+      if (info.zone === 'left')  holdLeft(false);
+      if (info.zone === 'right') holdRight(false);
+      // Entrer nouvelle zone
+      if (newZone === 'left')  holdLeft(true);
+      if (newZone === 'right') holdRight(true);
+      info.zone = newZone;
+    }
+  }
+}
+
+function onTouchEnd(e) {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const info = touches.get(t.identifier);
+    if (!info) continue;
+    const elapsed = Date.now() - info.startTime;
+    const dx = Math.abs(t.clientX - info.startX);
+    const dy = Math.abs(t.clientY - info.startY);
+
+    if (info.zone === 'left')  holdLeft(false);
+    if (info.zone === 'right') holdRight(false);
+
+    // Tap rapide au centre → saut
+    if (info.zone === 'mid' && elapsed < 250 && dx < 20 && dy < 20) {
+      lastTapTime = Date.now();
+      doJump();
+    }
+    // Tap rapide sur côté → aussi saut (si très rapide = tap, pas hold)
+    if ((info.zone === 'left' || info.zone === 'right') && elapsed < 120 && dx < 15 && dy < 15) {
+      doJump();
+    }
+
+    touches.delete(t.identifier);
+  }
+}
+
+document.addEventListener('touchstart', onTouchStart, { passive: false });
+document.addEventListener('touchmove',  onTouchMove,  { passive: false });
+document.addEventListener('touchend',   onTouchEnd,   { passive: false });
+document.addEventListener('touchcancel',onTouchEnd,   { passive: false });
+
+// ── Ripple visuel ─────────────────────────────────────────────────
+function spawnRipple(x, y) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = x + 'px';
+  r.style.top  = y + 'px';
+  r.style.position = 'fixed';
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 500);
+}
+
+// ── Plein écran ──────────────────────────────────────────────────
+document.getElementById('fs-btn').addEventListener('click', () => {
+  const el = document.documentElement;
+  if (!document.fullscreenElement) {
+    el.requestFullscreen?.() || el.webkitRequestFullscreen?.();
+  } else {
+    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+  }
+});
+
+// Aller en plein écran au lancement sur mobile
+window.addEventListener('EJS_ready', () => {
+  if (window.innerWidth < 768) {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  }
+});
+</script>
+
+</body>
+</html>
