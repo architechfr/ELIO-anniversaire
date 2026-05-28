@@ -226,67 +226,78 @@
       0%,100%{opacity:1;transform:scale(1)}
       50%{opacity:.6;transform:scale(.97)}
     }
+    /* ─── Croix directionnelle ───────────────────────── */
     #dpad {
       position:absolute;
-      bottom:max(18px, env(safe-area-inset-bottom,18px));
-      left:16px;
-      display:flex; gap:8px;
+      bottom:max(14px,env(safe-area-inset-bottom,14px));
+      left:10px;
+      display:grid;
+      grid-template-columns:repeat(3,54px);
+      grid-template-rows:repeat(3,54px);
+      gap:3px;
       pointer-events:none;
     }
-    .dpad-btn {
-      width:72px; height:72px;
-      border-radius:16px;
-      background:rgba(0,120,255,0.18);
-      border:2px solid rgba(0,180,255,0.45);
+    .dp {
+      border-radius:10px;
+      background:rgba(0,120,255,.16);
+      border:2px solid rgba(0,180,255,.4);
       display:flex; align-items:center; justify-content:center;
-      font-size:28px; color:rgba(255,255,255,0.55);
+      font-size:20px; color:rgba(255,255,255,.65);
       pointer-events:all; user-select:none; -webkit-user-select:none;
       touch-action:none; cursor:pointer;
-      transition:background .08s,transform .08s,border-color .08s;
-      box-shadow:0 2px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1);
+      transition:background .07s,transform .07s;
     }
-    .dpad-btn.pressed {
-      background:rgba(0,160,255,.55); border-color:rgba(0,220,255,.9);
-      color:#fff; transform:scale(.92);
-      box-shadow:0 0 20px rgba(0,180,255,.6),inset 0 1px 0 rgba(255,255,255,.2);
+    .dp.pressed {
+      background:rgba(0,150,255,.55); border-color:rgba(0,220,255,.9);
+      color:#fff; transform:scale(.9);
+      box-shadow:0 0 14px rgba(0,180,255,.6);
     }
+    .dp-empty { pointer-events:none; background:rgba(255,255,255,.03); border:2px solid rgba(255,255,255,.06); }
+
+    /* ─── Boutons action ─────────────────────────────── */
     #action-btns {
       position:absolute;
-      bottom:max(18px,env(safe-area-inset-bottom,18px));
-      right:16px;
-      display:flex; flex-direction:column; align-items:flex-end; gap:10px;
+      bottom:max(14px,env(safe-area-inset-bottom,14px));
+      right:10px;
+      display:flex; flex-direction:column; align-items:flex-end; gap:8px;
       pointer-events:none;
     }
     #btn-start {
-      width:80px; height:46px; border-radius:23px;
-      background:rgba(255,200,0,.25); border:3px solid rgba(255,215,0,.7);
-      color:#FFD700; font-size:11px; font-weight:900;
-      letter-spacing:2px; text-transform:uppercase;
+      width:78px; height:38px; border-radius:19px;
+      background:rgba(255,200,0,.18); border:2px solid rgba(255,215,0,.6);
+      color:#FFD700; font-size:10px; font-weight:900; letter-spacing:2px;
       display:flex; align-items:center; justify-content:center;
       pointer-events:all; user-select:none; -webkit-user-select:none;
       touch-action:none; cursor:pointer;
-      transition:background .08s,transform .08s;
-      box-shadow:0 2px 12px rgba(255,200,0,.3);
+      transition:background .07s,transform .07s;
     }
-    #btn-start.pressed {
-      background:rgba(255,215,0,.6); border-color:#FFD700;
-      color:#000; transform:scale(.92);
-      box-shadow:0 0 20px rgba(255,215,0,.7);
-    }
-    #btn-jump {
-      width:90px; height:90px; border-radius:50%;
-      background:rgba(0,200,80,.25); border:3px solid rgba(0,230,100,.7);
-      color:#fff; font-size:36px;
+    #btn-start.pressed { background:rgba(255,215,0,.5); color:#000; transform:scale(.92); }
+    .ab-row { display:flex; gap:10px; pointer-events:none; }
+    .btn-ab {
+      width:66px; height:66px; border-radius:50%;
+      font-size:15px; font-weight:900; letter-spacing:1px;
       display:flex; align-items:center; justify-content:center;
       pointer-events:all; user-select:none; -webkit-user-select:none;
       touch-action:none; cursor:pointer;
-      transition:background .08s,transform .08s,border-color .08s;
-      box-shadow:0 2px 20px rgba(0,0,0,.5),0 0 12px rgba(0,230,100,.3);
+      transition:background .07s,transform .07s;
     }
-    #btn-jump.pressed {
-      background:rgba(0,230,100,.6); border-color:rgba(0,255,120,.95);
-      color:#fff; transform:scale(.9);
-      box-shadow:0 0 28px rgba(0,230,100,.7);
+    #btn-a {
+      background:rgba(0,200,80,.2); border:3px solid rgba(0,230,100,.65);
+      color:rgba(80,255,140,.95);
+      box-shadow:0 2px 14px rgba(0,0,0,.4),0 0 8px rgba(0,230,100,.2);
+    }
+    #btn-a.pressed {
+      background:rgba(0,230,100,.55); color:#fff; transform:scale(.9);
+      box-shadow:0 0 22px rgba(0,230,100,.7);
+    }
+    #btn-b {
+      background:rgba(220,50,50,.2); border:3px solid rgba(255,80,80,.65);
+      color:rgba(255,120,120,.95);
+      box-shadow:0 2px 14px rgba(0,0,0,.4),0 0 8px rgba(255,80,80,.2);
+    }
+    #btn-b.pressed {
+      background:rgba(255,80,80,.55); color:#fff; transform:scale(.9);
+      box-shadow:0 0 22px rgba(255,80,80,.7);
     }
     #fs-btn {
       position:absolute; top:8px; right:12px; z-index:50;
@@ -375,13 +386,19 @@
     <div id="game"></div>
     <div id="game-tap"><div id="tap-hint">▶ APPUIE POUR JOUER</div></div>
     <div id="ctrl">
+      <!-- Croix directionnelle 4 directions -->
       <div id="dpad">
-        <div class="dpad-btn" id="btn-left">◀</div>
-        <div class="dpad-btn" id="btn-right">▶</div>
+        <div class="dp dp-empty"></div><div class="dp" id="btn-up">▲</div><div class="dp dp-empty"></div>
+        <div class="dp" id="btn-left">◀</div><div class="dp dp-empty"></div><div class="dp" id="btn-right">▶</div>
+        <div class="dp dp-empty"></div><div class="dp" id="btn-down">▼</div><div class="dp dp-empty"></div>
       </div>
+      <!-- Boutons action droite -->
       <div id="action-btns">
         <div id="btn-start">START</div>
-        <div id="btn-jump">🔵</div>
+        <div class="ab-row">
+          <div class="btn-ab" id="btn-b">B</div>
+          <div class="btn-ab" id="btn-a">A</div>
+        </div>
       </div>
     </div>
     <div id="fs-btn" title="Plein écran">⛶</div>
@@ -537,11 +554,15 @@ function tapBtn(i, ms=120) {
 }
 
 // Boutons → actions gamepad
+// Standard Gamepad: 0=A 1=B 8=Select 9=Start 12=↑ 13=↓ 14=← 15=→
 const btnMap = {
-  'btn-left':  { down:()=>padBtn(14,true),   up:()=>padBtn(14,false) },
-  'btn-right': { down:()=>padBtn(15,true),   up:()=>padBtn(15,false) },
-  'btn-jump':  { down:()=>padBtn(0,true),    up:()=>padBtn(0,false)  },
-  'btn-start': { down:()=>tapBtn(9,150),     up:()=>{}               },
+  'btn-up':    { down:()=>padBtn(12,true),  up:()=>padBtn(12,false) },
+  'btn-down':  { down:()=>padBtn(13,true),  up:()=>padBtn(13,false) },
+  'btn-left':  { down:()=>padBtn(14,true),  up:()=>padBtn(14,false) },
+  'btn-right': { down:()=>padBtn(15,true),  up:()=>padBtn(15,false) },
+  'btn-a':     { down:()=>padBtn(0,true),   up:()=>padBtn(0,false)  },
+  'btn-b':     { down:()=>padBtn(1,true),   up:()=>padBtn(1,false)  },
+  'btn-start': { down:()=>tapBtn(9,150),    up:()=>{}               },
 };
 
 const touchOwner = new Map();
