@@ -202,6 +202,29 @@
     #ctrl {
       position:absolute; inset:0; z-index:20;
       pointer-events:none;
+      /* Les touches passent au canvas sauf sur les boutons */
+    }
+    /* Zone centrale du jeu : cliquable pour démarrer */
+    #game-tap {
+      position:absolute; inset:0; z-index:19;
+      pointer-events:all;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    #game-tap.hidden { pointer-events:none; display:none; }
+    #tap-hint {
+      background:rgba(0,0,0,.55);
+      border:2px solid rgba(0,180,255,.5);
+      border-radius:20px;
+      padding:12px 24px;
+      color:#fff; font-size:13px; font-weight:700;
+      letter-spacing:2px; text-transform:uppercase;
+      animation: pulse-hint 1.2s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes pulse-hint {
+      0%,100%{opacity:1;transform:scale(1)}
+      50%{opacity:.6;transform:scale(.97)}
     }
     #dpad {
       position:absolute;
@@ -350,6 +373,7 @@
   </div>
   <div id="emu-wrapper">
     <div id="game"></div>
+    <div id="game-tap"><div id="tap-hint">▶ APPUIE POUR JOUER</div></div>
     <div id="ctrl">
       <div id="dpad">
         <div class="dpad-btn" id="btn-left">◀</div>
@@ -417,12 +441,42 @@ function launchGame(romUrl, title) {
       s.src = './data/loader.js';
       document.body.appendChild(s);
     } else {
-      // Changer de ROM sans recharger le moteur
       if (window.EJS_emulator) {
         window.EJS_emulator.changeGame(romUrl).catch(()=>{});
       }
     }
+
+    // Tap-to-start : cliquer sur le canvas EmulatorJS au premier tap
+    setupGameTap();
   }, 400);
+}
+
+// ── Tap-to-start ─────────────────────────────────────────────────
+function setupGameTap() {
+  const tap = document.getElementById('game-tap');
+  tap.classList.remove('hidden');
+
+  function doTap(e) {
+    e.preventDefault();
+    tap.classList.add('hidden');
+    // Cliquer sur le canvas EmulatorJS pour débloquer l'audio + démarrer
+    const canvas = document.querySelector('#game canvas');
+    if (canvas) {
+      canvas.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      canvas.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      canvas.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    }
+    // Fallback : si le canvas n'est pas encore là, réessayer
+    if (!canvas) {
+      setTimeout(() => {
+        const c = document.querySelector('#game canvas');
+        if (c) { c.click(); }
+      }, 800);
+    }
+  }
+
+  tap.addEventListener('click', doTap);
+  tap.addEventListener('touchend', doTap, { passive: false });
 }
 
 // ── Bouton retour ────────────────────────────────────────────────
