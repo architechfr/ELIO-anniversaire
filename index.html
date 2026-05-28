@@ -487,31 +487,61 @@ document.getElementById('back-btn').addEventListener('click', () => {
   setTimeout(() => { menu.style.transition='opacity .3s'; menu.style.opacity='1'; }, 10);
 });
 
-// ── Contrôles tactiles ───────────────────────────────────────────
-const KEY = { ArrowLeft:37, ArrowRight:39, ArrowUp:38, ArrowDown:40, z:90, x:88, Enter:13 };
+// ── FAUSSE MANETTE GAMEPAD (seule méthode qui marche avec RetroArch WASM) ──
+// RetroArch lit navigator.getGamepads() dans sa boucle principale.
+// On injecte un gamepad virtuel standard que EmulatorJS reconnaît.
+//
+// Mapping Standard Gamepad → RetroArch/SMS:
+//  button[0]  = A  → Saut / Action 1
+//  button[1]  = B  → Action 2
+//  button[9]  = Start
+//  button[8]  = Select
+//  button[12] = D-pad Haut
+//  button[13] = D-pad Bas
+//  button[14] = D-pad Gauche
+//  button[15] = D-pad Droite
 
-function sendKey(type, key) {
-  const opts = { key, code: key, keyCode: KEY[key]??0, which: KEY[key]??0,
-                 bubbles:true, cancelable:true };
-  // Envoyer sur window, document ET le canvas EmulatorJS
-  const ev1 = new KeyboardEvent(type, opts);
-  const ev2 = new KeyboardEvent(type, opts);
-  const ev3 = new KeyboardEvent(type, opts);
-  window.dispatchEvent(ev1);
-  document.dispatchEvent(ev2);
-  const canvas = document.querySelector('#game canvas');
-  if (canvas) canvas.dispatchEvent(ev3);
+const PAD = {
+  id: 'Virtual Gamepad (STANDARD GAMEPAD MAPPING) 0',
+  index: 0,
+  connected: true,
+  timestamp: performance.now(),
+  mapping: 'standard',
+  axes: [0, 0, 0, 0],
+  buttons: Array.from({length:17}, ()=>({ pressed:false, touched:false, value:0 }))
+};
+
+// Intercepter navigator.getGamepads pour retourner notre faux gamepad
+const _orig = navigator.getGamepads.bind(navigator);
+navigator.getGamepads = function() {
+  const real = _orig();
+  return [PAD, real[1]??null, real[2]??null, real[3]??null];
+};
+
+// Annoncer la connexion du gamepad dès que l'émulateur est prêt
+function connectPad() {
+  PAD.timestamp = performance.now();
+  try { window.dispatchEvent(new GamepadEvent('gamepadconnected', { gamepad: PAD })); } catch(e){}
+}
+// Le connecter immédiatement et aussi quand EJS est prêt
+connectPad();
+window.addEventListener('EJS_ready', () => { setTimeout(connectPad, 500); });
+
+function padBtn(i, on) {
+  PAD.buttons[i] = { pressed:on, touched:on, value: on?1:0 };
+  PAD.timestamp  = performance.now();
+}
+function tapBtn(i, ms=120) {
+  padBtn(i, true);
+  setTimeout(()=>padBtn(i, false), ms);
 }
 
-function pressKey(key)  { sendKey('keydown', key); }
-function releaseKey(key){ sendKey('keyup',   key); }
-function tapKey(key, ms=120) { pressKey(key); setTimeout(()=>releaseKey(key), ms); }
-
+// Boutons → actions gamepad
 const btnMap = {
-  'btn-left':  { down:()=>pressKey('ArrowLeft'),   up:()=>releaseKey('ArrowLeft')  },
-  'btn-right': { down:()=>pressKey('ArrowRight'),  up:()=>releaseKey('ArrowRight') },
-  'btn-jump':  { down:()=>pressKey('z'),           up:()=>releaseKey('z')          },
-  'btn-start': { down:()=>tapKey('Enter', 100),    up:()=>{}                       },
+  'btn-left':  { down:()=>padBtn(14,true),   up:()=>padBtn(14,false) },
+  'btn-right': { down:()=>padBtn(15,true),   up:()=>padBtn(15,false) },
+  'btn-jump':  { down:()=>padBtn(0,true),    up:()=>padBtn(0,false)  },
+  'btn-start': { down:()=>tapBtn(9,150),     up:()=>{}               },
 };
 
 const touchOwner = new Map();
