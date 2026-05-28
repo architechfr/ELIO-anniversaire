@@ -189,101 +189,104 @@
     }
 
     /* ────────────────────────────
-       OVERLAY TACTILE (INVISIBLE)
+       MANETTE TACTILE
     ──────────────────────────── */
-    #touch-overlay {
-      position: absolute; inset: 0;
-      z-index: 20;
-      display: grid;
-      grid-template-columns: 35% 30% 35%;
-      grid-template-rows: 1fr 45%;
-      pointer-events: none; /* zones actives via JS */
-    }
-
-    /* Zones visuelles (très subtiles) */
-    .touch-zone {
-      position: relative;
-      pointer-events: none;
-      display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
-    }
-
-    .zone-left  { grid-column: 1; grid-row: 2; }
-    .zone-mid   { grid-column: 2; grid-row: 2; }
-    .zone-right { grid-column: 3; grid-row: 2; }
-
-    .zone-hint {
-      font-size: 28px;
-      opacity: 0.18;
-      transition: opacity 0.1s, transform 0.1s;
-      user-select: none;
+    #ctrl {
+      position: absolute; inset: 0; z-index: 20;
       pointer-events: none;
     }
 
-    .zone-left.active   .zone-hint,
-    .zone-mid.active    .zone-hint,
-    .zone-right.active  .zone-hint {
-      opacity: 0.7;
-      transform: scale(1.3);
-    }
-
-    /* Ripple press feedback */
-    .ripple {
+    /* ── D-PAD gauche ── */
+    #dpad {
       position: absolute;
-      border-radius: 50%;
-      background: rgba(0, 180, 255, 0.35);
-      width: 80px; height: 80px;
-      margin-left: -40px; margin-top: -40px;
-      animation: ripple-anim 0.5s ease-out forwards;
+      bottom: max(18px, env(safe-area-inset-bottom, 18px));
+      left: 16px;
+      display: flex; gap: 8px;
       pointer-events: none;
     }
-    @keyframes ripple-anim {
-      from { transform: scale(0); opacity: 1; }
-      to   { transform: scale(3); opacity: 0; }
+
+    .dpad-btn {
+      width: 72px; height: 72px;
+      border-radius: 16px;
+      background: rgba(0, 120, 255, 0.18);
+      border: 2px solid rgba(0, 180, 255, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      color: rgba(255,255,255,0.55);
+      pointer-events: all;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.08s, transform 0.08s, border-color 0.08s;
+      touch-action: none;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
     }
 
-    /* Guide gestes (disparaît après 4s) */
-    #gesture-guide {
-      position: absolute; inset: 0; z-index: 30;
+    .dpad-btn.pressed {
+      background: rgba(0, 160, 255, 0.55);
+      border-color: rgba(0, 220, 255, 0.9);
+      color: #fff;
+      transform: scale(0.92);
+      box-shadow: 0 0 20px rgba(0,180,255,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    /* ── Boutons action droite ── */
+    #action-btns {
+      position: absolute;
+      bottom: max(18px, env(safe-area-inset-bottom, 18px));
+      right: 16px;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-end;
-      padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
-      pointer-events: none;
-      animation: fade-guide 0.4s ease 4s forwards;
-      background: linear-gradient(transparent 40%, rgba(0,0,20,0.8));
-    }
-    @keyframes fade-guide {
-      to { opacity: 0; }
-    }
-
-    .guide-row {
-      display: flex; gap: 20px;
       align-items: flex-end;
-      justify-content: center;
-      width: 100%;
-      padding: 0 16px 12px;
+      gap: 10px;
+      pointer-events: none;
     }
 
-    .guide-item {
-      flex: 1; max-width: 120px;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 6px;
-    }
-
-    .guide-icon {
-      font-size: 32px;
-      filter: drop-shadow(0 0 8px rgba(0,180,255,0.8));
-    }
-
-    .guide-label {
-      font-size: 9px; font-weight: 700;
+    #btn-start {
+      width: 56px; height: 32px;
+      border-radius: 16px;
+      background: rgba(255, 200, 0, 0.15);
+      border: 2px solid rgba(255, 215, 0, 0.45);
+      color: rgba(255, 215, 0, 0.7);
+      font-size: 9px; font-weight: 900;
       letter-spacing: 1px; text-transform: uppercase;
-      color: rgba(255,255,255,0.75);
-      text-align: center;
-      line-height: 1.3;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: all;
+      user-select: none; -webkit-user-select: none;
+      touch-action: none; cursor: pointer;
+      transition: background 0.08s, transform 0.08s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    #btn-start.pressed {
+      background: rgba(255, 215, 0, 0.45);
+      border-color: #FFD700;
+      color: #fff;
+      transform: scale(0.92);
+      box-shadow: 0 0 16px rgba(255,215,0,0.5);
     }
 
-    /* Bouton fullscreen discret */
+    #btn-jump {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: rgba(0, 200, 80, 0.18);
+      border: 3px solid rgba(0, 230, 100, 0.5);
+      color: rgba(255,255,255,0.7);
+      font-size: 32px;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: all;
+      user-select: none; -webkit-user-select: none;
+      touch-action: none; cursor: pointer;
+      transition: background 0.08s, transform 0.08s, border-color 0.08s;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    #btn-jump.pressed {
+      background: rgba(0, 230, 100, 0.55);
+      border-color: rgba(0, 255, 120, 0.9);
+      color: #fff;
+      transform: scale(0.9);
+      box-shadow: 0 0 24px rgba(0,230,100,0.6);
+    }
+
+    /* Bouton plein écran */
     #fs-btn {
       position: absolute; top: 8px; right: 12px; z-index: 50;
       width: 32px; height: 32px;
@@ -294,21 +297,8 @@
       font-size: 14px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
+      pointer-events: all;
     }
-
-    /* Indicateur Start */
-    #start-indicator {
-      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-      z-index: 50;
-      font-size: 8px; font-weight: 700; letter-spacing: 1px;
-      color: rgba(255,255,255,0.3);
-      text-transform: uppercase;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s;
-      white-space: nowrap;
-    }
-    #start-indicator.show { opacity: 1; }
   </style>
 </head>
 <body>
@@ -344,40 +334,19 @@
     <!-- Émulateur -->
     <div id="game"></div>
 
-    <!-- Overlay tactile -->
-    <div id="touch-overlay">
-      <div class="touch-zone zone-left"  id="zone-left">
-        <span class="zone-hint">◀</span>
+    <!-- Manette tactile -->
+    <div id="ctrl">
+      <!-- D-pad gauche -->
+      <div id="dpad">
+        <div class="dpad-btn" id="btn-left">◀</div>
+        <div class="dpad-btn" id="btn-right">▶</div>
       </div>
-      <div class="touch-zone zone-mid"   id="zone-mid">
-        <span class="zone-hint">🔵</span>
-      </div>
-      <div class="touch-zone zone-right" id="zone-right">
-        <span class="zone-hint">▶</span>
+      <!-- Boutons action droite -->
+      <div id="action-btns">
+        <div id="btn-start">START</div>
+        <div id="btn-jump">🔵</div>
       </div>
     </div>
-
-    <!-- Guide gestes (s'efface tout seul) -->
-    <div id="gesture-guide">
-      <div class="guide-row">
-        <div class="guide-item">
-          <div class="guide-icon">👈</div>
-          <div class="guide-label">Maintenir<br>gauche</div>
-        </div>
-        <div class="guide-item">
-          <div class="guide-icon">👆</div>
-          <div class="guide-label">Taper<br>= Saut</div>
-        </div>
-        <div class="guide-item">
-          <div class="guide-icon">👉</div>
-          <div class="guide-label">Maintenir<br>droite</div>
-        </div>
-      </div>
-      <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:2px;padding-bottom:4px">DOUBLE TAPE = START</div>
-    </div>
-
-    <!-- Indicateur START (flash) -->
-    <div id="start-indicator">▶ START ◀</div>
 
     <!-- Bouton plein écran -->
     <div id="fs-btn" title="Plein écran">⛶</div>
@@ -432,126 +401,65 @@ splash.addEventListener('click',     startGame);
 splash.addEventListener('touchstart', startGame, { passive: true });
 
 // ── Contrôles tactiles ────────────────────────────────────────────
-const overlay   = document.getElementById('touch-overlay');
-const zoneL     = document.getElementById('zone-left');
-const zoneM     = document.getElementById('zone-mid');
-const zoneR     = document.getElementById('zone-right');
-const startInd  = document.getElementById('start-indicator');
+function pressKey(key)  { document.dispatchEvent(new KeyboardEvent('keydown', { key, code: key, keyCode: keyCode(key), bubbles: true, cancelable: true })); }
+function releaseKey(key){ document.dispatchEvent(new KeyboardEvent('keyup',   { key, code: key, keyCode: keyCode(key), bubbles: true, cancelable: true })); }
+function keyCode(key) {
+  return { ArrowLeft:37, ArrowRight:39, ArrowUp:38, ArrowDown:40, z:90, Enter:13 }[key] ?? 0;
+}
+function tapKey(key, ms = 100) { pressKey(key); setTimeout(() => releaseKey(key), ms); }
 
-const W = () => window.innerWidth;
+// Binding bouton → touche
+const btnMap = {
+  'btn-left':  { down: () => pressKey('ArrowLeft'),  up: () => releaseKey('ArrowLeft')  },
+  'btn-right': { down: () => pressKey('ArrowRight'), up: () => releaseKey('ArrowRight') },
+  'btn-jump':  { down: () => tapKey('z', 120),       up: () => {}                       },
+  'btn-start': { down: () => tapKey('Enter', 80),    up: () => {}                       },
+};
 
-// Map des touches actives
-const held = { left: false, right: false };
+// Suivi multi-touch : quel bouton possède quel touch
+const touchOwner = new Map(); // touchId → btnId
 
-function pressKey(key)   { document.dispatchEvent(new KeyboardEvent('keydown', { key, code: key, bubbles: true, cancelable: true })); }
-function releaseKey(key) { document.dispatchEvent(new KeyboardEvent('keyup',   { key, code: key, bubbles: true, cancelable: true })); }
-function tapKey(key, ms = 80) {
-  pressKey(key);
-  setTimeout(() => releaseKey(key), ms);
+function btnDown(btnId) {
+  const el = document.getElementById(btnId);
+  if (el) el.classList.add('pressed');
+  btnMap[btnId]?.down();
+}
+function btnUp(btnId) {
+  const el = document.getElementById(btnId);
+  if (el) el.classList.remove('pressed');
+  btnMap[btnId]?.up();
 }
 
-function holdLeft(on)  { if (held.left  === on) return; held.left  = on; on ? pressKey('ArrowLeft')  : releaseKey('ArrowLeft');  zoneL.classList.toggle('active', on); }
-function holdRight(on) { if (held.right === on) return; held.right = on; on ? pressKey('ArrowRight') : releaseKey('ArrowRight'); zoneR.classList.toggle('active', on); }
-function doJump()      { tapKey('z', 100); zoneM.classList.add('active'); setTimeout(() => zoneM.classList.remove('active'), 150); }
-function doStart()     { tapKey('Enter', 80); flashStart(); }
-
-function flashStart() {
-  startInd.classList.add('show');
-  setTimeout(() => startInd.classList.remove('show'), 700);
+function getBtnFromTarget(el) {
+  while (el && el !== document.body) {
+    if (el.id && btnMap[el.id]) return el.id;
+    el = el.parentElement;
+  }
+  return null;
 }
 
-// Zone par x
-function zoneForX(x) {
-  const w = W();
-  if (x < w * 0.35) return 'left';
-  if (x > w * 0.65) return 'right';
-  return 'mid';
-}
-
-// Gestion multi-touch
-const touches = new Map(); // id → { zone, startTime, startX, startY }
-let   lastTapTime = 0;
-
-function onTouchStart(e) {
+document.getElementById('ctrl').addEventListener('touchstart', e => {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    const zone = zoneForX(t.clientX);
-    const now  = Date.now();
-    touches.set(t.identifier, { zone, startTime: now, startX: t.clientX, startY: t.clientY });
-
-    if (zone === 'left')  holdLeft(true);
-    if (zone === 'right') holdRight(true);
-    // mid : on attend le touchend pour distinguer tap rapide
-    if (zone === 'mid') {
-      // double tap → start
-      if (now - lastTapTime < 320) {
-        lastTapTime = 0;
-        doStart();
-      }
-    }
-    spawnRipple(t.clientX, t.clientY);
+    const btn = getBtnFromTarget(t.target);
+    if (btn) { touchOwner.set(t.identifier, btn); btnDown(btn); }
   }
-}
+}, { passive: false });
 
-function onTouchMove(e) {
+document.getElementById('ctrl').addEventListener('touchend', e => {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    const info = touches.get(t.identifier);
-    if (!info) continue;
-    const newZone = zoneForX(t.clientX);
-    if (newZone !== info.zone) {
-      // Quitter ancienne zone
-      if (info.zone === 'left')  holdLeft(false);
-      if (info.zone === 'right') holdRight(false);
-      // Entrer nouvelle zone
-      if (newZone === 'left')  holdLeft(true);
-      if (newZone === 'right') holdRight(true);
-      info.zone = newZone;
-    }
+    const btn = touchOwner.get(t.identifier);
+    if (btn) { btnUp(btn); touchOwner.delete(t.identifier); }
   }
-}
+}, { passive: false });
 
-function onTouchEnd(e) {
-  e.preventDefault();
+document.getElementById('ctrl').addEventListener('touchcancel', e => {
   for (const t of e.changedTouches) {
-    const info = touches.get(t.identifier);
-    if (!info) continue;
-    const elapsed = Date.now() - info.startTime;
-    const dx = Math.abs(t.clientX - info.startX);
-    const dy = Math.abs(t.clientY - info.startY);
-
-    if (info.zone === 'left')  holdLeft(false);
-    if (info.zone === 'right') holdRight(false);
-
-    // Tap rapide au centre → saut
-    if (info.zone === 'mid' && elapsed < 250 && dx < 20 && dy < 20) {
-      lastTapTime = Date.now();
-      doJump();
-    }
-    // Tap rapide sur côté → aussi saut (si très rapide = tap, pas hold)
-    if ((info.zone === 'left' || info.zone === 'right') && elapsed < 120 && dx < 15 && dy < 15) {
-      doJump();
-    }
-
-    touches.delete(t.identifier);
+    const btn = touchOwner.get(t.identifier);
+    if (btn) { btnUp(btn); touchOwner.delete(t.identifier); }
   }
-}
-
-document.addEventListener('touchstart', onTouchStart, { passive: false });
-document.addEventListener('touchmove',  onTouchMove,  { passive: false });
-document.addEventListener('touchend',   onTouchEnd,   { passive: false });
-document.addEventListener('touchcancel',onTouchEnd,   { passive: false });
-
-// ── Ripple visuel ─────────────────────────────────────────────────
-function spawnRipple(x, y) {
-  const r = document.createElement('div');
-  r.className = 'ripple';
-  r.style.left = x + 'px';
-  r.style.top  = y + 'px';
-  r.style.position = 'fixed';
-  document.body.appendChild(r);
-  setTimeout(() => r.remove(), 500);
-}
+}, { passive: false });
 
 // ── Plein écran ──────────────────────────────────────────────────
 document.getElementById('fs-btn').addEventListener('click', () => {
