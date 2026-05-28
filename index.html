@@ -258,35 +258,35 @@
       pointer-events:none;
     }
     #btn-start {
-      width:56px; height:32px; border-radius:16px;
-      background:rgba(255,200,0,.15); border:2px solid rgba(255,215,0,.45);
-      color:rgba(255,215,0,.7); font-size:9px; font-weight:900;
-      letter-spacing:1px; text-transform:uppercase;
+      width:80px; height:46px; border-radius:23px;
+      background:rgba(255,200,0,.25); border:3px solid rgba(255,215,0,.7);
+      color:#FFD700; font-size:11px; font-weight:900;
+      letter-spacing:2px; text-transform:uppercase;
       display:flex; align-items:center; justify-content:center;
       pointer-events:all; user-select:none; -webkit-user-select:none;
       touch-action:none; cursor:pointer;
       transition:background .08s,transform .08s;
-      box-shadow:0 2px 8px rgba(0,0,0,.4);
+      box-shadow:0 2px 12px rgba(255,200,0,.3);
     }
     #btn-start.pressed {
-      background:rgba(255,215,0,.45); border-color:#FFD700;
-      color:#fff; transform:scale(.92);
-      box-shadow:0 0 16px rgba(255,215,0,.5);
+      background:rgba(255,215,0,.6); border-color:#FFD700;
+      color:#000; transform:scale(.92);
+      box-shadow:0 0 20px rgba(255,215,0,.7);
     }
     #btn-jump {
-      width:80px; height:80px; border-radius:50%;
-      background:rgba(0,200,80,.18); border:3px solid rgba(0,230,100,.5);
-      color:rgba(255,255,255,.7); font-size:32px;
+      width:90px; height:90px; border-radius:50%;
+      background:rgba(0,200,80,.25); border:3px solid rgba(0,230,100,.7);
+      color:#fff; font-size:36px;
       display:flex; align-items:center; justify-content:center;
       pointer-events:all; user-select:none; -webkit-user-select:none;
       touch-action:none; cursor:pointer;
       transition:background .08s,transform .08s,border-color .08s;
-      box-shadow:0 2px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);
+      box-shadow:0 2px 20px rgba(0,0,0,.5),0 0 12px rgba(0,230,100,.3);
     }
     #btn-jump.pressed {
-      background:rgba(0,230,100,.55); border-color:rgba(0,255,120,.9);
+      background:rgba(0,230,100,.6); border-color:rgba(0,255,120,.95);
       color:#fff; transform:scale(.9);
-      box-shadow:0 0 24px rgba(0,230,100,.6);
+      box-shadow:0 0 28px rgba(0,230,100,.7);
     }
     #fs-btn {
       position:absolute; top:8px; right:12px; z-index:50;
@@ -488,16 +488,30 @@ document.getElementById('back-btn').addEventListener('click', () => {
 });
 
 // ── Contrôles tactiles ───────────────────────────────────────────
-function pressKey(key)  { document.dispatchEvent(new KeyboardEvent('keydown',{key,code:key,keyCode:kc(key),bubbles:true,cancelable:true})); }
-function releaseKey(key){ document.dispatchEvent(new KeyboardEvent('keyup',  {key,code:key,keyCode:kc(key),bubbles:true,cancelable:true})); }
-function kc(k){ return {ArrowLeft:37,ArrowRight:39,ArrowUp:38,ArrowDown:40,z:90,Enter:13}[k]??0; }
-function tapKey(key,ms=100){ pressKey(key); setTimeout(()=>releaseKey(key),ms); }
+const KEY = { ArrowLeft:37, ArrowRight:39, ArrowUp:38, ArrowDown:40, z:90, x:88, Enter:13 };
+
+function sendKey(type, key) {
+  const opts = { key, code: key, keyCode: KEY[key]??0, which: KEY[key]??0,
+                 bubbles:true, cancelable:true };
+  // Envoyer sur window, document ET le canvas EmulatorJS
+  const ev1 = new KeyboardEvent(type, opts);
+  const ev2 = new KeyboardEvent(type, opts);
+  const ev3 = new KeyboardEvent(type, opts);
+  window.dispatchEvent(ev1);
+  document.dispatchEvent(ev2);
+  const canvas = document.querySelector('#game canvas');
+  if (canvas) canvas.dispatchEvent(ev3);
+}
+
+function pressKey(key)  { sendKey('keydown', key); }
+function releaseKey(key){ sendKey('keyup',   key); }
+function tapKey(key, ms=120) { pressKey(key); setTimeout(()=>releaseKey(key), ms); }
 
 const btnMap = {
   'btn-left':  { down:()=>pressKey('ArrowLeft'),   up:()=>releaseKey('ArrowLeft')  },
   'btn-right': { down:()=>pressKey('ArrowRight'),  up:()=>releaseKey('ArrowRight') },
-  'btn-jump':  { down:()=>tapKey('z',120),         up:()=>{}                       },
-  'btn-start': { down:()=>tapKey('Enter',80),      up:()=>{}                       },
+  'btn-jump':  { down:()=>pressKey('z'),           up:()=>releaseKey('z')          },
+  'btn-start': { down:()=>tapKey('Enter', 100),    up:()=>{}                       },
 };
 
 const touchOwner = new Map();
