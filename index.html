@@ -515,65 +515,34 @@ document.getElementById('back-btn').addEventListener('click', () => {
   setTimeout(() => { menu.style.transition='opacity .3s'; menu.style.opacity='1'; }, 10);
 });
 
-// ── FAUSSE MANETTE GAMEPAD (seule méthode qui marche avec RetroArch WASM) ──
-// RetroArch lit navigator.getGamepads() dans sa boucle principale.
-// On injecte un gamepad virtuel standard que EmulatorJS reconnaît.
+// ── CONTRÔLES via API native EmulatorJS ───────────────────────────
+// EJS_emulator.gameManager.simulateInput(player, buttonIndex, value)
+// injecte les inputs DIRECTEMENT dans le coeur RetroArch.
 //
-// Mapping Standard Gamepad → RetroArch/SMS:
-//  button[0]  = A  → Saut / Action 1
-//  button[1]  = B  → Action 2
-//  button[9]  = Start
-//  button[8]  = Select
-//  button[12] = D-pad Haut
-//  button[13] = D-pad Bas
-//  button[14] = D-pad Gauche
-//  button[15] = D-pad Droite
+// Indices RetroArch RETRO_DEVICE_ID_JOYPAD :
+//  0=B  1=Y  2=SELECT  3=START  4=UP  5=DOWN  6=LEFT  7=RIGHT  8=A  9=X
+const RA = { B:0, Y:1, SELECT:2, START:3, UP:4, DOWN:5, LEFT:6, RIGHT:7, A:8, X:9 };
 
-const PAD = {
-  id: 'Virtual Gamepad (STANDARD GAMEPAD MAPPING) 0',
-  index: 0,
-  connected: true,
-  timestamp: performance.now(),
-  mapping: 'standard',
-  axes: [0, 0, 0, 0],
-  buttons: Array.from({length:17}, ()=>({ pressed:false, touched:false, value:0 }))
-};
+function gm() { return window.EJS_emulator?.gameManager; }
 
-// Intercepter navigator.getGamepads pour retourner notre faux gamepad
-const _orig = navigator.getGamepads.bind(navigator);
-navigator.getGamepads = function() {
-  const real = _orig();
-  return [PAD, real[1]??null, real[2]??null, real[3]??null];
-};
-
-// Annoncer la connexion du gamepad dès que l'émulateur est prêt
-function connectPad() {
-  PAD.timestamp = performance.now();
-  try { window.dispatchEvent(new GamepadEvent('gamepadconnected', { gamepad: PAD })); } catch(e){}
+function sim(buttonIndex, value) {
+  const g = gm();
+  if (g && typeof g.simulateInput === 'function') {
+    try { g.simulateInput(0, buttonIndex, value ? 1 : 0); } catch(e) {}
+  }
 }
-// Le connecter immédiatement et aussi quand EJS est prêt
-connectPad();
-window.addEventListener('EJS_ready', () => { setTimeout(connectPad, 500); });
+function press(idx)   { sim(idx, 1); }
+function release(idx) { sim(idx, 0); }
+function tapInput(idx, ms=140) { press(idx); setTimeout(()=>release(idx), ms); }
 
-function padBtn(i, on) {
-  PAD.buttons[i] = { pressed:on, touched:on, value: on?1:0 };
-  PAD.timestamp  = performance.now();
-}
-function tapBtn(i, ms=120) {
-  padBtn(i, true);
-  setTimeout(()=>padBtn(i, false), ms);
-}
-
-// Boutons → actions gamepad
-// Standard Gamepad: 0=A 1=B 8=Select 9=Start 12=↑ 13=↓ 14=← 15=→
 const btnMap = {
-  'btn-up':    { down:()=>padBtn(12,true),  up:()=>padBtn(12,false) },
-  'btn-down':  { down:()=>padBtn(13,true),  up:()=>padBtn(13,false) },
-  'btn-left':  { down:()=>padBtn(14,true),  up:()=>padBtn(14,false) },
-  'btn-right': { down:()=>padBtn(15,true),  up:()=>padBtn(15,false) },
-  'btn-a':     { down:()=>padBtn(0,true),   up:()=>padBtn(0,false)  },
-  'btn-b':     { down:()=>padBtn(1,true),   up:()=>padBtn(1,false)  },
-  'btn-start': { down:()=>tapBtn(9,150),    up:()=>{}               },
+  'btn-up':    { down:()=>press(RA.UP),    up:()=>release(RA.UP)    },
+  'btn-down':  { down:()=>press(RA.DOWN),  up:()=>release(RA.DOWN)  },
+  'btn-left':  { down:()=>press(RA.LEFT),  up:()=>release(RA.LEFT)  },
+  'btn-right': { down:()=>press(RA.RIGHT), up:()=>release(RA.RIGHT) },
+  'btn-a':     { down:()=>press(RA.A),     up:()=>release(RA.A)     },  // saut
+  'btn-b':     { down:()=>press(RA.B),     up:()=>release(RA.B)     },
+  'btn-start': { down:()=>tapInput(RA.START,150), up:()=>{}         },
 };
 
 const touchOwner = new Map();
