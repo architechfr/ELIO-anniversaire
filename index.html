@@ -542,7 +542,7 @@ const btnMap = {
   'btn-right': { down:()=>press(RA.RIGHT), up:()=>release(RA.RIGHT) },
   'btn-a':     { down:()=>press(RA.A),     up:()=>release(RA.A)     },  // saut
   'btn-b':     { down:()=>press(RA.B),     up:()=>release(RA.B)     },
-  'btn-start': { down:()=>tapInput(RA.START,150), up:()=>{}         },
+  'btn-start': { down:()=>press(RA.START), up:()=>release(RA.START) },
 };
 
 const touchOwner = new Map();
