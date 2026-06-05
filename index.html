@@ -171,15 +171,17 @@
       flex-shrink:0;
     }
     #back-btn {
-      width:28px; height:28px;
-      border-radius:6px;
-      background:rgba(0,80,200,0.4);
-      border:1px solid rgba(0,150,255,0.5);
-      color:rgba(255,255,255,0.7);
-      font-size:14px;
-      display:flex; align-items:center; justify-content:center;
+      min-width:64px; height:30px; padding:0 12px;
+      border-radius:8px;
+      background:rgba(0,100,220,0.55);
+      border:2px solid rgba(0,180,255,0.7);
+      color:#fff;
+      font-size:12px; font-weight:900; letter-spacing:1px;
+      display:flex; align-items:center; justify-content:center; gap:4px;
       cursor:pointer; flex-shrink:0;
+      touch-action:manipulation;
     }
+    #back-btn:active { transform:scale(.94); background:rgba(0,140,255,.7); }
     #game-title-bar {
       flex:1;
       font-size:11px; font-weight:900; font-style:italic;
@@ -389,7 +391,7 @@
 ══════════════════════════════ -->
 <div id="app">
   <div id="topbar">
-    <div id="back-btn" title="Menu">←</div>
+    <div id="back-btn" title="Menu">← MENU</div>
     <div id="game-title-bar">SONIC 2</div>
     <span class="player-name">⭐ ÉLIO</span>
   </div>
@@ -430,61 +432,49 @@ window.EJS_Buttons = {
   gamepad:false, cheat:false
 };
 
-// ── Sélection de jeu ─────────────────────────────────────────────
+// ── Catalogue des jeux ───────────────────────────────────────────
+const GAMES = {
+  sonic1:  { rom:'rom/Sonic the Hedgehog.gg',                       title:'Sonic the Hedgehog' },
+  sonic2:  { rom:'rom/Sonic the Hedgehog 2.gg',                     title:'Sonic the Hedgehog 2' },
+  triple:  { rom:'rom/Sonic the Hedgehog - Triple Trouble.gg',      title:'Sonic Triple Trouble' },
+  ecco:    { rom:'rom/Ecco the Dolphin 2 - Tthe Tides of Time.gg',  title:'Ecco the Dolphin 2' },
+  streets: { rom:'rom/Streets of Rage 2.gg',                        title:'Streets of Rage 2' },
+};
+
 const menu    = document.getElementById('menu');
 const app     = document.getElementById('app');
 const titleBar = document.getElementById('game-title-bar');
 
-let emuLoaded = false;
-let currentRom = null;
-
+// Clic sur une carte → recharge la page sur ce jeu (émulateur propre à chaque fois)
 document.querySelectorAll('.game-card').forEach(card => {
-  card.addEventListener('click', () => launchGame(
-    card.dataset.rom,
-    card.dataset.title
-  ));
-  card.addEventListener('touchend', e => {
-    e.preventDefault();
-    launchGame(card.dataset.rom, card.dataset.title);
-  }, { passive:false });
+  const go = e => { if(e) e.preventDefault(); window.location.href = '?game=' + card.dataset.id; };
+  card.addEventListener('click', go);
+  card.addEventListener('touchend', go, { passive:false });
 });
 
-function launchGame(romUrl, title) {
-  // Config EmulatorJS pour ce jeu
+// ── Au chargement : lancer le jeu demandé dans l'URL, sinon menu ──
+function bootFromUrl() {
+  const id = new URLSearchParams(location.search).get('game');
+  const game = id && GAMES[id];
+  if (!game) return; // pas de jeu → on reste sur le menu
+
+  // Masquer menu, afficher l'écran de jeu
+  menu.style.display = 'none';
+  app.classList.add('visible');
+  titleBar.textContent = game.title;
+
+  // Configurer et charger EmulatorJS
   window.EJS_core    = 'smsplus';
-  window.EJS_gameUrl = romUrl;
+  window.EJS_gameUrl = game.rom;
   window.EJS_player  = '#game';
 
-  titleBar.textContent = title;
+  const s = document.createElement('script');
+  s.src = './data/loader.js';
+  document.body.appendChild(s);
 
-  // Transition menu → jeu
-  menu.style.transition = 'opacity .4s';
-  menu.style.opacity = '0';
-  setTimeout(() => {
-    menu.style.display = 'none';
-    app.classList.add('visible');
-
-    if (!emuLoaded) {
-      emuLoaded = true;
-      currentRom = romUrl;
-      const s = document.createElement('script');
-      s.src = './data/loader.js';
-      document.body.appendChild(s);
-      setupGameTap();
-    } else if (romUrl === currentRom) {
-      // Même jeu : on reprend simplement où on en était
-      resumeGame();
-    } else {
-      // Autre jeu : on change la ROM
-      currentRom = romUrl;
-      resumeGame();
-      if (window.EJS_emulator) {
-        window.EJS_emulator.changeGame(romUrl).catch(()=>{});
-      }
-      setupGameTap();
-    }
-  }, 400);
+  setupGameTap();
 }
+bootFromUrl();
 
 // ── Tap-to-start ─────────────────────────────────────────────────
 function setupGameTap() {
@@ -514,27 +504,17 @@ function setupGameTap() {
   tap.addEventListener('touchend', doTap, { passive: false });
 }
 
-// ── Bouton retour : stoppe le jeu et coupe le son ────────────────
-function pauseGame() {
-  const g = window.EJS_emulator?.gameManager;
-  try { g?.toggleMainLoop?.(0); } catch(e) {}
-  try { window.EJS_emulator?.pause?.(); } catch(e) {}
+// ── Bouton retour : recharge le menu (coupe net le son + émulateur) ──
+function quitToMenu() {
+  // Stopper le son immédiatement avant le rechargement
+  try { window.EJS_emulator?.gameManager?.toggleMainLoop?.(0); } catch(e) {}
   try { window.EJS_emulator?.setVolume?.(0); } catch(e) {}
+  // Recharger la page sans paramètre → menu propre
+  window.location.href = location.pathname;
 }
-function resumeGame() {
-  const g = window.EJS_emulator?.gameManager;
-  try { g?.toggleMainLoop?.(1); } catch(e) {}
-  try { window.EJS_emulator?.play?.(); } catch(e) {}
-  try { window.EJS_emulator?.setVolume?.(1); } catch(e) {}
-}
-
-document.getElementById('back-btn').addEventListener('click', () => {
-  pauseGame();
-  app.classList.remove('visible');
-  menu.style.display = '';
-  menu.style.opacity = '0';
-  setTimeout(() => { menu.style.transition='opacity .3s'; menu.style.opacity='1'; }, 10);
-});
+const backBtn = document.getElementById('back-btn');
+backBtn.addEventListener('click', quitToMenu);
+backBtn.addEventListener('touchend', e => { e.preventDefault(); quitToMenu(); }, { passive:false });
 
 // ── CONTRÔLES via API native EmulatorJS ───────────────────────────
 // EJS_emulator.gameManager.simulateInput(player, buttonIndex, value)
