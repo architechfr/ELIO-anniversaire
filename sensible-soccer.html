@@ -337,7 +337,7 @@
   window.EJS_core          = 'segaMD';
   window.EJS_gameUrl       = b64ToBlobUrl(ROM_BASE64);
   window.EJS_gameName      = 'Sensible Soccer';
-  window.EJS_startOnLoaded = true;
+  window.EJS_startOnLoaded = false;
   window.EJS_pathtodata    = 'https://cdn.emulatorjs.org/stable/data/';
   window.EJS_color         = '#2f81f7';
   // On désactive le pad virtuel intégré (on a le nôtre)
@@ -684,25 +684,6 @@
   // ============================================================
   document.addEventListener('gesturestart', e => e.preventDefault());
   document.addEventListener('dblclick',     e => e.preventDefault());
-</script>
-<script>
-// Débloque le son : capture les AudioContext et les reprend au 1er geste
-(function(){
-  const ctxs = [];
-  const Orig = window.AudioContext || window.webkitAudioContext;
-  if (!Orig) return;
-  function Patched(){ const c = new Orig(...arguments); ctxs.push(c); return c; }
-  Patched.prototype = Orig.prototype;
-  window.AudioContext = Patched;
-  window.webkitAudioContext = Patched;
-  function resume(){
-    ctxs.forEach(c => { try { if (c.state === 'suspended') c.resume(); } catch(e){} });
-    try { window.EJS_emulator?.play?.(); } catch(e){}
-  }
-  ['touchstart','touchend','pointerdown','click','keydown'].forEach(ev =>
-    document.addEventListener(ev, resume, { passive:true, capture:true })
-  );
-})();
 </script>
 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
