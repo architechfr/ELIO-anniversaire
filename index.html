@@ -738,6 +738,19 @@ function endIntro() {
   introSkip.addEventListener('touchend', e => { e.preventDefault(); endIntro(); }, { passive:false });
 })();
 
+// ── Verrouillage paysage + plein écran ───────────────────────────
+function goLandscapeFullscreen() {
+  const el = document.documentElement;
+  const fs = el.requestFullscreen || el.webkitRequestFullscreen;
+  const done = () => { try { screen.orientation?.lock?.('landscape'); } catch(e) {} };
+  if (!document.fullscreenElement && fs) {
+    const p = fs.call(el);
+    if (p && p.then) p.then(done).catch(done); else setTimeout(done, 100);
+  } else {
+    done();
+  }
+}
+
 // ── Tap-to-start ─────────────────────────────────────────────────
 function setupGameTap() {
   const tap = document.getElementById('game-tap');
@@ -746,6 +759,8 @@ function setupGameTap() {
   function doTap(e) {
     e.preventDefault();
     tap.classList.add('hidden');
+    // Plein écran + verrouillage paysage (ce tap est un geste utilisateur valide)
+    goLandscapeFullscreen();
     // Cliquer sur le canvas EmulatorJS pour débloquer l'audio + démarrer
     const canvas = document.querySelector('#game canvas');
     if (canvas) {
@@ -844,9 +859,8 @@ ctrl.addEventListener('touchcancel', e=>{
 
 // ── Plein écran ──────────────────────────────────────────────────
 document.getElementById('fs-btn').addEventListener('click', ()=>{
-  const el = document.documentElement;
-  if(!document.fullscreenElement) el.requestFullscreen?.() || el.webkitRequestFullscreen?.();
-  else document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+  if(!document.fullscreenElement) goLandscapeFullscreen();
+  else { try{ screen.orientation?.unlock?.(); }catch(e){} document.exitFullscreen?.() || document.webkitExitFullscreen?.(); }
 });
 
 // ── Panneau Réglages + QR code de partage ───────────────────────
