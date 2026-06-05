@@ -3,10 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#4f46e5">
-<meta name="description" content="Créez et partagez votre carte de visite numérique : QR code, vCard, lien de partage.">
+<meta name="theme-color" content="#334155">
+<meta name="description" content="Affichez et partagez votre carte de visite numérique : QR code et enregistrement du contact.">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Carte de visite numérique</title>
+<!-- Installation sur iPhone / Android -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ma carte">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Ma carte de visite</title>
 <style>
   :root{
     --accent:#4f46e5;
@@ -180,11 +187,40 @@
   .toast.show{transform:translateX(-50%) translateY(0)}
 
   /* Mode lecture (carte partagée) */
-  body.view-mode .editor,body.view-mode .app-head p{display:none}
+  body.view-mode .editor,body.view-mode .app-head p,body.view-mode #installBtn{display:none}
   body.view-mode .layout{grid-template-columns:1fr;max-width:440px;margin:0 auto}
   .view-cta{display:none;margin-top:18px;text-align:center}
   body.view-mode .view-cta{display:block}
   .hidden{display:none!important}
+
+  /* Bouton installation */
+  #installBtn{
+    display:none;margin:14px auto 0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+    border:none;border-radius:30px;padding:11px 22px;font-size:14px;font-weight:700;
+    cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4);
+  }
+  #installBtn:active{transform:scale(.96)}
+
+  /* Présentation du QR en grand (pour le montrer à quelqu'un) */
+  #qrFull{
+    position:fixed;inset:0;z-index:200;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:22px;
+    background:rgba(2,6,23,.97);padding:24px;text-align:center;
+  }
+  #qrFull.show{display:flex}
+  #qrFull .qrbig{
+    width:min(78vw,360px);height:min(78vw,360px);background:#fff;border-radius:20px;
+    padding:16px;display:flex;align-items:center;justify-content:center;
+  }
+  #qrFull .qrbig img{width:100%;height:100%;image-rendering:pixelated}
+  #qrFull .who{color:#fff;font-size:22px;font-weight:800}
+  #qrFull .sub{color:#94a3b8;font-size:14px;max-width:320px}
+  #qrFull .close{
+    margin-top:6px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.3);
+    border-radius:30px;padding:10px 26px;font-size:15px;font-weight:700;cursor:pointer;
+  }
+  .qr-holder{cursor:pointer}
 </style>
 </head>
 <body>
@@ -192,6 +228,7 @@
   <div class="app-head">
     <h1>Carte de visite numérique</h1>
     <p>Renseignez vos infos, partagez votre carte par QR code ou par lien.</p>
+    <button id="installBtn">📲 Installer l'application</button>
   </div>
 
   <div class="layout">
@@ -284,8 +321,9 @@
 
       <div class="share-box" id="shareBox">
         <div class="qr-holder" id="qrHolder"></div>
-        <div class="qr-hint">Scannez ce QR code pour ajouter le contact au téléphone</div>
+        <div class="qr-hint">Faites scanner ce QR : votre carte s'ouvre sur le téléphone de la personne, avec le bouton « Enregistrer le contact ». Touchez le QR pour l'afficher en grand.</div>
         <div class="share-actions">
+          <button class="btn btn-primary btn-sm" id="presentBtn">📱 Présenter en grand</button>
           <button class="btn btn-ghost btn-sm" id="copyLinkBtn">Copier le lien</button>
           <button class="btn btn-ghost btn-sm" id="downloadQrBtn">Télécharger le QR</button>
         </div>
@@ -298,10 +336,18 @@
   </div>
 </div>
 
+<!-- Écran QR plein écran (pour le présenter à quelqu'un) -->
+<div id="qrFull">
+  <div class="who" id="qrFullName">Ma carte</div>
+  <div class="qrbig" id="qrFullCode"></div>
+  <div class="sub">Scannez avec l'appareil photo pour ouvrir ma carte et m'enregistrer dans vos contacts.</div>
+  <button class="close" id="qrFullClose">Fermer</button>
+</div>
+
 <div class="toast" id="toast">Copié !</div>
 
-<!-- Bibliothèque QR (avec repli si réseau indisponible) -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<!-- Bibliothèque QR embarquée (fonctionne hors-ligne) -->
+<script src="./qrcode.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -351,10 +397,18 @@
 
   // ─── État ──────────────────────────────────────────────────────
   const STORE_KEY = 'carte-visite-v1';
+  // Carte par défaut (modifiable dans l'éditeur) : votre carte s'affiche
+  // immédiatement à l'ouverture de l'app ou du site.
   let state = {
-    name:'', title:'', company:'', bio:'',
-    phone:'', email:'', website:'', address:'',
-    photo:'', theme:0, links:[]
+    name:'Florian CLARISSE',
+    title:"Maître d'Œuvre · Associé cogérant",
+    company:'Cadence Architectes Associés',
+    bio:'',
+    phone:'06 69 14 34 18',
+    email:'f.clarisse@cadence-architectes.fr',
+    website:'',
+    address:'16-18 rue Dubrunfaut, 75012 Paris',
+    photo:'', theme:7, links:[]
   };
 
   // ─── Utilitaires ───────────────────────────────────────────────
@@ -528,8 +582,14 @@
   }
 
   // ─── Lien de partage ───────────────────────────────────────────
+  // On exclut la photo du lien/QR pour garder le code scannable (un QR a
+  // une capacité limitée). La photo reste affichée dans votre app locale.
+  function sharePayload(){
+    const { photo, ...rest } = state;
+    return rest;
+  }
   function shareUrl(){
-    return location.origin+location.pathname+'#c='+encodeState(state);
+    return location.origin+location.pathname+'#c='+encodeState(sharePayload());
   }
   async function doShare(){
     const url=shareUrl();
@@ -550,31 +610,28 @@
     ta.remove();
   }
 
-  // ─── QR code (encode la vCard → scan = ajout du contact) ───────
-  function renderQR(){
-    const holder=$('qrHolder'); holder.innerHTML='';
+  // ─── QR code (encode le LIEN → scan = ouvre la carte sur le tél.) ──
+  // Construit un <img> de QR pour le lien de partage dans le conteneur donné.
+  function buildQRImg(holder, cellSize){
+    holder.innerHTML='';
     if(typeof qrcode==='undefined'){
-      holder.innerHTML='<div style="color:#64748b;font-size:12px;padding:10px">QR indisponible hors ligne</div>';
+      holder.innerHTML='<div style="color:#64748b;font-size:12px;padding:10px">QR indisponible</div>';
       return;
     }
-    const data=(state.name||state.phone||state.email)?buildVCard():shareUrl();
-    try{
-      const qr=qrcode(0,'M');
-      qr.addData(data);
-      qr.make();
-      holder.innerHTML=qr.createImgTag(5,0);
-      const img=holder.querySelector('img');
-      if(img){img.style.width='100%';img.style.height='100%';}
-    }catch(e){
-      // Données trop volumineuses → repli sur le lien de partage
+    const url=shareUrl();
+    for(const ec of ['M','L']){
       try{
-        const qr=qrcode(0,'L'); qr.addData(shareUrl()); qr.make();
-        holder.innerHTML=qr.createImgTag(4,0);
-      }catch(e2){
-        holder.innerHTML='<div style="color:#64748b;font-size:12px;padding:10px">QR trop volumineux</div>';
-      }
+        const qr=qrcode(0,ec); qr.addData(url); qr.make();
+        holder.innerHTML=qr.createImgTag(cellSize||5,8);
+        const img=holder.querySelector('img');
+        if(img){img.style.width='100%';img.style.height='100%';}
+        return;
+      }catch(e){}
     }
+    holder.innerHTML='<div style="color:#64748b;font-size:12px;padding:10px">QR trop volumineux</div>';
   }
+  function renderQR(){ buildQRImg($('qrHolder'), 5); }
+
   function downloadQR(){
     const img=$('qrHolder').querySelector('img');
     if(!img){toast('QR indisponible');return;}
@@ -582,6 +639,14 @@
     a.href=img.src; a.download=((state.name||'carte').replace(/\s+/g,'-'))+'-qr.gif';
     document.body.appendChild(a); a.click(); a.remove();
   }
+
+  // ─── Présenter le QR en plein écran ────────────────────────────
+  function presentQR(){
+    $('qrFullName').textContent = state.name || 'Ma carte';
+    buildQRImg($('qrFullCode'), 8);
+    $('qrFull').classList.add('show');
+  }
+  function closePresentQR(){ $('qrFull').classList.remove('show'); }
 
   // ─── Synchronisation globale ───────────────────────────────────
   let saveTimer;
@@ -655,6 +720,31 @@
     $('shareBtn').onclick=doShare;
     $('copyLinkBtn').onclick=()=>copyText(shareUrl(),'Lien copié !');
     $('downloadQrBtn').onclick=downloadQR;
+    $('presentBtn') && ($('presentBtn').onclick=presentQR);
+    $('qrFullClose') && ($('qrFullClose').onclick=closePresentQR);
+    $('qrFull') && ($('qrFull').addEventListener('click',e=>{ if(e.target===$('qrFull')) closePresentQR(); }));
+  }
+
+  // ─── Installation PWA (Android/Chrome) ─────────────────────────
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault(); deferredPrompt=e;
+    const b=$('installBtn');
+    if(b){
+      b.style.display='block';
+      b.onclick=async()=>{
+        b.style.display='none';
+        deferredPrompt.prompt();
+        try{ await deferredPrompt.userChoice; }catch(_){}
+        deferredPrompt=null;
+      };
+    }
+  });
+  window.addEventListener('appinstalled',()=>{ const b=$('installBtn'); if(b) b.style.display='none'; });
+
+  // ─── Service worker (mode hors-ligne + installable) ────────────
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
   }
 
   document.addEventListener('DOMContentLoaded',init);
