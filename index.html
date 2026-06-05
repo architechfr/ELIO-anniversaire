@@ -312,9 +312,51 @@
       display:flex; align-items:center; justify-content:center;
       cursor:pointer; pointer-events:all;
     }
+    /* ══ INTRO VIDÉO ══════════════════════════════════════════════ */
+    #intro {
+      position:fixed; inset:0; z-index:200;
+      background:#000;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    #intro.hidden { display:none; }
+    #intro-video {
+      width:100%; height:100%;
+      object-fit:cover;
+    }
+    #intro-skip {
+      position:absolute;
+      bottom:max(24px, env(safe-area-inset-bottom,24px)); right:24px;
+      z-index:201;
+      padding:10px 22px; border-radius:24px;
+      background:rgba(0,0,0,.55); border:2px solid rgba(255,255,255,.5);
+      color:#fff; font-size:13px; font-weight:900; letter-spacing:2px;
+      text-transform:uppercase; cursor:pointer;
+      backdrop-filter:blur(4px);
+      animation: skip-appear .5s ease 1.5s both;
+    }
+    @keyframes skip-appear { from{opacity:0;transform:translateY(10px)} to{opacity:1} }
+    #intro-tap {
+      position:absolute; inset:0; z-index:201;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,16,.85);
+      color:#fff; font-size:clamp(16px,5vw,26px); font-weight:900;
+      letter-spacing:2px; text-transform:uppercase;
+      cursor:pointer;
+    }
+    #intro-tap.hidden { display:none; }
   </style>
 </head>
 <body>
+
+<!-- ══════════════════════════════
+     INTRO VIDÉO
+══════════════════════════════ -->
+<div id="intro">
+  <video id="intro-video" src="intro.mp4" playsinline preload="auto"></video>
+  <div id="intro-tap">▶ &nbsp; APPUIE POUR COMMENCER</div>
+  <div id="intro-skip">PASSER ▶▶</div>
+</div>
 
 <!-- ══════════════════════════════
      MENU SÉLECTION
@@ -479,7 +521,38 @@ function bootFromUrl() {
 
   setupGameTap();
 }
-bootFromUrl();
+// ── INTRO VIDÉO ──────────────────────────────────────────────────
+const introEl   = document.getElementById('intro');
+const introVid  = document.getElementById('intro-video');
+const introTap  = document.getElementById('intro-tap');
+const introSkip = document.getElementById('intro-skip');
+
+function endIntro() {
+  introEl.classList.add('hidden');
+  try { introVid.pause(); introVid.src = ''; } catch(e) {}
+  sessionStorage.setItem('introSeen', '1');
+  bootFromUrl();
+}
+
+(function startIntroFlow() {
+  const hasGame = new URLSearchParams(location.search).get('game');
+  // Pas d'intro si on lance un jeu directement, ou si déjà vue cette session
+  if (hasGame || sessionStorage.getItem('introSeen')) {
+    endIntro();
+    return;
+  }
+  // Jouer l'intro après le tap (nécessaire pour le son sur mobile)
+  function playIntro() {
+    introTap.classList.add('hidden');
+    introVid.play().catch(() => endIntro());
+  }
+  introTap.addEventListener('click', playIntro);
+  introTap.addEventListener('touchend', e => { e.preventDefault(); playIntro(); }, { passive:false });
+
+  introVid.addEventListener('ended', endIntro);
+  introSkip.addEventListener('click', endIntro);
+  introSkip.addEventListener('touchend', e => { e.preventDefault(); endIntro(); }, { passive:false });
+})();
 
 // ── Tap-to-start ─────────────────────────────────────────────────
 function setupGameTap() {
