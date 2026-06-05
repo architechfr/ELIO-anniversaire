@@ -1,6 +1,6 @@
 // Service Worker — Élio Game Room
 // Permet l'installation PWA + fonctionnement hors-ligne après 1re visite.
-const CACHE = 'elio-sonic-v4';
+const CACHE = 'elio-sonic-v5';
 
 // Fichiers essentiels mis en cache à l'installation
 const CORE = [
