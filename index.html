@@ -467,6 +467,11 @@ function bootFromUrl() {
   window.EJS_core    = 'smsplus';
   window.EJS_gameUrl = game.rom;
   window.EJS_player  = '#game';
+  // Identité unique par jeu + pas de cache de ROM (évite de resservir l'ancien jeu)
+  window.EJS_gameName        = game.title;
+  window.EJS_gameID          = id;
+  window.EJS_disableDatabases = true;
+  window.EJS_CacheLimit       = 0;
 
   const s = document.createElement('script');
   s.src = './data/loader.js';
