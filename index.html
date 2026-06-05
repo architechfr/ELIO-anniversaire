@@ -326,18 +326,6 @@
       background:rgba(0,230,100,.55); color:#fff; transform:scale(.9);
       box-shadow:0 0 22px rgba(0,230,100,.7);
     }
-    /* Bouton Boule / Spin Dash (jeux Sonic uniquement) */
-    #btn-spin {
-      display:none;
-      background:rgba(255,180,0,.2); border:3px solid rgba(255,205,0,.7);
-      color:#ffd24d; font-size:26px;
-      box-shadow:0 2px 14px rgba(0,0,0,.4),0 0 8px rgba(255,200,0,.25);
-    }
-    #ctrl.show-spin #btn-spin { display:flex; }
-    #btn-spin.pressed {
-      background:rgba(255,205,0,.6); color:#fff; transform:scale(.9);
-      box-shadow:0 0 24px rgba(255,205,0,.75);
-    }
     #btn-b {
       background:rgba(220,50,50,.2); border:3px solid rgba(255,80,80,.65);
       color:rgba(255,120,120,.95);
@@ -612,7 +600,6 @@
       <div id="action-btns">
         <div id="btn-start">START</div>
         <div class="ab-row">
-          <div class="btn-ab" id="btn-spin" title="Boule / Spin Dash">🌀</div>
           <div class="btn-ab" id="btn-b">B</div>
           <div class="btn-ab" id="btn-a">A</div>
         </div>
@@ -698,11 +685,6 @@ function bootFromUrl() {
     frame.allow = 'autoplay; fullscreen; gamepad';
     document.getElementById('emu-wrapper').appendChild(frame);
     return;
-  }
-
-  // Bouton BOULE seulement pour les jeux Sonic (spin dash)
-  if (['sonic1','sonic2','triple'].includes(id)) {
-    document.getElementById('ctrl').classList.add('show-spin');
   }
 
   // Configurer et charger EmulatorJS
@@ -831,21 +813,6 @@ function press(idx)   { sim(idx, 1); }
 function release(idx) { sim(idx, 0); }
 function tapInput(idx, ms=140) { press(idx); setTimeout(()=>release(idx), ms); }
 
-// Bouton BOULE : accroupit + charge (rafale de saut) puis lance au relâchement
-let spinTimer = null;
-function spinDown() {
-  press(RA.DOWN);                                   // s'accroupir
-  press(RA.A); setTimeout(()=>release(RA.A), 60);   // 1re charge
-  spinTimer = setInterval(() => {                   // charge en continu
-    press(RA.A); setTimeout(()=>release(RA.A), 50);
-  }, 130);
-}
-function spinUp() {
-  if (spinTimer) { clearInterval(spinTimer); spinTimer = null; }
-  release(RA.A);
-  release(RA.DOWN);                                 // relâcher = lancer la boule
-}
-
 const btnMap = {
   'btn-up':    { down:()=>press(RA.UP),    up:()=>release(RA.UP)    },
   'btn-down':  { down:()=>press(RA.DOWN),  up:()=>release(RA.DOWN)  },
@@ -853,7 +820,6 @@ const btnMap = {
   'btn-right': { down:()=>press(RA.RIGHT), up:()=>release(RA.RIGHT) },
   'btn-a':     { down:()=>press(RA.A),     up:()=>release(RA.A)     },  // saut
   'btn-b':     { down:()=>press(RA.B),     up:()=>release(RA.B)     },
-  'btn-spin':  { down:spinDown,            up:spinUp                },  // boule
   'btn-start': { down:()=>press(RA.START), up:()=>release(RA.START) },
 };
 
