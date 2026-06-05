@@ -312,6 +312,9 @@
       background:rgba(255,80,80,.55); color:#fff; transform:scale(.9);
       box-shadow:0 0 22px rgba(255,80,80,.7);
     }
+    /* Masquer la manette tactile NATIVE d'EmulatorJS (on garde la nôtre) */
+    .ejs_virtualGamepad_parent { display:none !important; }
+
     #fs-btn {
       position:absolute; top:8px; right:12px; z-index:50;
       width:32px; height:32px;
