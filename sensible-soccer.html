@@ -685,6 +685,25 @@
   document.addEventListener('gesturestart', e => e.preventDefault());
   document.addEventListener('dblclick',     e => e.preventDefault());
 </script>
+<script>
+// Débloque le son : capture les AudioContext et les reprend au 1er geste
+(function(){
+  const ctxs = [];
+  const Orig = window.AudioContext || window.webkitAudioContext;
+  if (!Orig) return;
+  function Patched(){ const c = new Orig(...arguments); ctxs.push(c); return c; }
+  Patched.prototype = Orig.prototype;
+  window.AudioContext = Patched;
+  window.webkitAudioContext = Patched;
+  function resume(){
+    ctxs.forEach(c => { try { if (c.state === 'suspended') c.resume(); } catch(e){} });
+    try { window.EJS_emulator?.play?.(); } catch(e){}
+  }
+  ['touchstart','touchend','pointerdown','click','keydown'].forEach(ev =>
+    document.addEventListener(ev, resume, { passive:true, capture:true })
+  );
+})();
+</script>
 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
 </body>
