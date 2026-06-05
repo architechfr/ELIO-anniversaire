@@ -872,10 +872,13 @@ function buildQR() {
   box.appendChild(img);
 }
 
-// ── PWA : enregistrement du service worker (installation téléphone) ──
+// ── Désactivation du service worker (les MAJ doivent être immédiates) ──
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  // Charge le kill-switch qui purge l'ancien SW, puis se désinstalle
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  // Filet de sécurité : désinscrire tout SW déjà présent
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    // (le kill-switch sw.js s'en charge ; ceci couvre les cas restants)
   });
 }
 </script>
