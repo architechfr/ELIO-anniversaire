@@ -436,6 +436,7 @@ const app     = document.getElementById('app');
 const titleBar = document.getElementById('game-title-bar');
 
 let emuLoaded = false;
+let currentRom = null;
 
 document.querySelectorAll('.game-card').forEach(card => {
   card.addEventListener('click', () => launchGame(
@@ -465,17 +466,23 @@ function launchGame(romUrl, title) {
 
     if (!emuLoaded) {
       emuLoaded = true;
+      currentRom = romUrl;
       const s = document.createElement('script');
       s.src = './data/loader.js';
       document.body.appendChild(s);
+      setupGameTap();
+    } else if (romUrl === currentRom) {
+      // Même jeu : on reprend simplement où on en était
+      resumeGame();
     } else {
+      // Autre jeu : on change la ROM
+      currentRom = romUrl;
+      resumeGame();
       if (window.EJS_emulator) {
         window.EJS_emulator.changeGame(romUrl).catch(()=>{});
       }
+      setupGameTap();
     }
-
-    // Tap-to-start : cliquer sur le canvas EmulatorJS au premier tap
-    setupGameTap();
   }, 400);
 }
 
@@ -507,8 +514,22 @@ function setupGameTap() {
   tap.addEventListener('touchend', doTap, { passive: false });
 }
 
-// ── Bouton retour ────────────────────────────────────────────────
+// ── Bouton retour : stoppe le jeu et coupe le son ────────────────
+function pauseGame() {
+  const g = window.EJS_emulator?.gameManager;
+  try { g?.toggleMainLoop?.(0); } catch(e) {}
+  try { window.EJS_emulator?.pause?.(); } catch(e) {}
+  try { window.EJS_emulator?.setVolume?.(0); } catch(e) {}
+}
+function resumeGame() {
+  const g = window.EJS_emulator?.gameManager;
+  try { g?.toggleMainLoop?.(1); } catch(e) {}
+  try { window.EJS_emulator?.play?.(); } catch(e) {}
+  try { window.EJS_emulator?.setVolume?.(1); } catch(e) {}
+}
+
 document.getElementById('back-btn').addEventListener('click', () => {
+  pauseGame();
   app.classList.remove('visible');
   menu.style.display = '';
   menu.style.opacity = '0';
