@@ -51,16 +51,17 @@
     .hero-img {
       position:relative; z-index:1;
       flex-shrink:0;
-      width: min(94vw, 620px);
+      width: min(78vw, 460px);
+      max-height: 40vh;
       height:auto;            /* ratio respecté, jamais rognée */
       object-fit: contain;
-      margin-top: 16px;
-      border-radius: 20px;
+      margin-top: 12px;
+      border-radius: 18px;
       border: 3px solid rgba(255,200,0,.5);
       box-shadow:
         0 0 0 1px rgba(0,150,255,.4),
-        0 0 50px rgba(0,120,255,.5),
-        0 0 90px rgba(255,180,0,.25);
+        0 0 40px rgba(0,120,255,.5),
+        0 0 70px rgba(255,180,0,.25);
     }
 
     /* Bandeau "Choisis ton jeu" */
@@ -323,16 +324,18 @@
     .ejs_menu_button,
     .ejs_context_menu { display:none !important; }
 
-    /* Bouton Réglages dans le menu principal */
+    /* Bouton Réglages : icône en haut à droite (hors flux, pas de scroll) */
     #settings-btn {
-      position:relative; z-index:1;
-      margin: 4px auto 24px;
-      padding:10px 24px; border-radius:22px;
-      background:rgba(0,80,200,.35); border:2px solid rgba(0,160,255,.5);
-      color:#cfe8ff; font-size:13px; font-weight:800; letter-spacing:1px;
-      cursor:pointer; font-family:inherit;
+      position:fixed; z-index:5;
+      top:max(10px, env(safe-area-inset-top,10px)); right:12px;
+      width:46px; height:46px; border-radius:50%;
+      padding:0; font-size:22px; line-height:1;
+      background:rgba(0,40,90,.6); border:2px solid rgba(0,160,255,.55);
+      color:#cfe8ff; cursor:pointer; font-family:inherit;
+      display:flex; align-items:center; justify-content:center;
+      backdrop-filter:blur(4px);
     }
-    #settings-btn:active { transform:scale(.95); }
+    #settings-btn:active { transform:scale(.9); }
 
     /* Panneau Réglages */
     #settings-panel {
@@ -527,8 +530,8 @@
 
   </div>
 
-  <!-- Bouton Réglages -->
-  <button id="settings-btn">⚙️ Réglages</button>
+  <!-- Bouton Réglages (icône en haut à droite) -->
+  <button id="settings-btn" title="Réglages">⚙️</button>
 </div>
 
 <!-- ══════════════════════════════
