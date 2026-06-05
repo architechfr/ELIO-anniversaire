@@ -388,6 +388,13 @@
       font-size:11px; color:rgba(255,255,255,.55);
       margin-top:10px; line-height:1.4;
     }
+    #share-btn {
+      margin-top:14px; padding:12px 24px; border-radius:24px;
+      background:rgba(0,140,255,.3); border:2px solid rgba(0,170,255,.7);
+      color:#fff; font-size:14px; font-weight:900; letter-spacing:1px;
+      cursor:pointer; font-family:inherit; width:100%;
+    }
+    #share-btn:active { transform:scale(.96); }
     #settings-close {
       padding:12px 32px; border-radius:24px;
       background:rgba(0,200,80,.3); border:2px solid rgba(0,230,100,.7);
@@ -563,6 +570,7 @@
       <div class="settings-label">📲 Partager avec tes amis</div>
       <div id="qr-code"></div>
       <div class="settings-hint">Scanne ce QR code pour ouvrir le jeu d'Élio</div>
+      <button id="share-btn">📤 Partager le lien</button>
     </div>
 
     <button id="settings-close">✓ Fermer</button>
@@ -871,6 +879,25 @@ function buildQR() {
   box.innerHTML = '';
   box.appendChild(img);
 }
+
+// Bouton partage : ouvre le partage natif du téléphone, sinon copie le lien
+document.getElementById('share-btn')?.addEventListener('click', async () => {
+  const url  = location.origin + location.pathname;
+  const data = { title: "Élio Game Room — Team Sonic", text: "Viens jouer aux jeux Sonic d'Élio ! 🦔", url };
+  try {
+    if (navigator.share) { await navigator.share(data); return; }
+  } catch(e) { return; } // l'utilisateur a annulé
+  // Fallback : copier dans le presse-papier
+  try {
+    await navigator.clipboard.writeText(url);
+    const b = document.getElementById('share-btn');
+    const old = b.textContent;
+    b.textContent = '✓ Lien copié !';
+    setTimeout(() => b.textContent = old, 1800);
+  } catch(e) {
+    prompt('Copie ce lien à partager :', url);
+  }
+});
 
 // ── Désactivation du service worker (les MAJ doivent être immédiates) ──
 if ('serviceWorker' in navigator) {
