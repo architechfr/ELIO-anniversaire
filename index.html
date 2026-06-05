@@ -104,6 +104,23 @@
     }
     .game-card:active { transform:scale(0.94); border-color:rgba(0,200,255,.8); }
 
+    /* Carte armée (1er tap) : invite à confirmer */
+    .game-card.armed {
+      border-color:#00e676;
+      box-shadow:0 0 0 3px rgba(0,230,118,.5), 0 0 26px rgba(0,230,118,.7);
+      transform:scale(1.06); z-index:4;
+    }
+    .game-card.armed::after {
+      content:'▶ JOUER';
+      position:absolute; inset:0; z-index:5;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,170,75,.55);
+      color:#fff; font-weight:900; font-size:15px; letter-spacing:1px;
+      border-radius:12px;
+      animation: armpulse .8s ease-in-out infinite;
+    }
+    @keyframes armpulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+
     /* Couleur par jeu */
     .game-card[data-id="sonic1"]    { --c1:#0044ff; --c2:#00aaff; }
     .game-card[data-id="sonic2"]    { --c1:#0066ff; --c2:#FFD700; }
@@ -470,6 +487,7 @@
 
   <div class="menu-header">
     <div class="title-room">▼ Choisis ton jeu ▼</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:4px;letter-spacing:1px">Tape une fois, puis encore pour jouer</div>
   </div>
 
   <div class="games-grid">
@@ -611,11 +629,30 @@ const menu    = document.getElementById('menu');
 const app     = document.getElementById('app');
 const titleBar = document.getElementById('game-title-bar');
 
-// Clic sur une carte → recharge la page sur ce jeu (émulateur propre à chaque fois)
+// Lancement en DEUX tapes (évite les départs accidentels) :
+//  1er tap → la carte s'arme (verte, "▶ JOUER")  •  2e tap → lance
+let armedCard = null, armTimer = null;
+function disarmAll() {
+  document.querySelectorAll('.game-card.armed').forEach(c => c.classList.remove('armed'));
+  armedCard = null;
+  if (armTimer) { clearTimeout(armTimer); armTimer = null; }
+}
 document.querySelectorAll('.game-card').forEach(card => {
-  const go = e => { if(e) e.preventDefault(); window.location.href = '?game=' + card.dataset.id; };
-  card.addEventListener('click', go);
-  card.addEventListener('touchend', go, { passive:false });
+  card.addEventListener('click', e => {
+    e.preventDefault();
+    if (armedCard === card) {
+      window.location.href = '?game=' + card.dataset.id;   // 2e tap → on lance
+    } else {
+      disarmAll();
+      card.classList.add('armed');                          // 1er tap → on arme
+      armedCard = card;
+      armTimer = setTimeout(disarmAll, 3000);               // auto-désarme après 3 s
+    }
+  });
+});
+// Taper en dehors d'une carte annule la sélection
+document.getElementById('menu').addEventListener('click', e => {
+  if (!e.target.closest('.game-card')) disarmAll();
 });
 
 // ── Au chargement : lancer le jeu demandé dans l'URL, sinon menu ──
