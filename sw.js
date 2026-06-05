@@ -1,6 +1,6 @@
 // Service Worker — Élio Game Room
 // Permet l'installation PWA + fonctionnement hors-ligne après 1re visite.
-const CACHE = 'elio-sonic-v1';
+const CACHE = 'elio-sonic-v3';
 
 // Fichiers essentiels mis en cache à l'installation
 const CORE = [
@@ -26,14 +26,31 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Cache-first : sert depuis le cache, sinon réseau (et met en cache au passage)
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const url = e.request.url;
+  // HTML / racine / JS principal : NETWORK-FIRST (toujours la dernière version)
+  const isPage = e.request.mode === 'navigate'
+    || url.endsWith('.html')
+    || url.endsWith('/')
+    || url.endsWith('index.html');
+
+  if (isPage) {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        const copy = resp.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return resp;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Reste (ROMs, data, vidéo, images) : CACHE-FIRST (rapide + hors-ligne)
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(resp => {
-        // Met en cache les fichiers du jeu (ROMs, data, vidéo) à la volée
         if (resp.ok && resp.type === 'basic') {
           const copy = resp.clone();
           caches.open(CACHE).then(c => c.put(e.request, copy));
