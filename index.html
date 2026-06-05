@@ -320,10 +320,20 @@
       overflow:hidden;
     }
     #intro.hidden { display:none; }
+    /* Fond flou (effet cinéma ambilight) qui remplit tout l'écran */
+    #intro-video-bg {
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      filter: blur(36px) brightness(.55) saturate(1.4);
+      transform: scale(1.15);
+      z-index:0;
+    }
+    /* Vidéo nette, entière, centrée par-dessus */
     #intro-video {
+      position:relative; z-index:1;
       width:100%; height:100%;
       object-fit:contain;
-      background:#000;
     }
     #intro-skip {
       position:absolute;
@@ -354,6 +364,7 @@
      INTRO VIDÉO
 ══════════════════════════════ -->
 <div id="intro">
+  <video id="intro-video-bg" src="intro.mp4" playsinline preload="auto" muted></video>
   <video id="intro-video" src="intro.mp4" playsinline preload="auto"></video>
   <div id="intro-tap">▶ &nbsp; APPUIE POUR COMMENCER</div>
   <div id="intro-skip">PASSER ▶▶</div>
@@ -543,9 +554,11 @@ function endIntro() {
     return;
   }
   // Jouer l'intro après le tap (nécessaire pour le son sur mobile)
+  const introVidBg = document.getElementById('intro-video-bg');
   function playIntro() {
     introTap.classList.add('hidden');
     introVid.play().catch(() => endIntro());
+    introVidBg.play().catch(() => {});
   }
   introTap.addEventListener('click', playIntro);
   introTap.addEventListener('touchend', e => { e.preventDefault(); playIntro(); }, { passive:false });
