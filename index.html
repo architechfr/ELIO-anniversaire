@@ -79,29 +79,29 @@
     }
     @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
 
-    /* Grille jeux — disposée sous l'image */
+    /* Grille jeux — cartes compactes pour tout voir sans scroller */
     .games-grid {
       position:relative; z-index:1;
       display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(150px, 40vw), 1fr));
-      gap:14px;
-      padding:12px 16px max(36px, env(safe-area-inset-bottom, 36px));
-      width: min(96vw, 820px);
+      grid-template-columns: repeat(auto-fill, minmax(min(110px, 29vw), 1fr));
+      gap:10px;
+      padding:10px 14px max(28px, env(safe-area-inset-bottom, 28px));
+      width: min(98vw, 720px);
     }
 
     .game-card {
-      border-radius:16px;
+      border-radius:14px;
       overflow:hidden;
       cursor:pointer;
       position:relative;
       background:rgba(255,255,255,0.05);
-      border:2px solid rgba(255,255,255,0.1);
+      border:2px solid rgba(255,255,255,0.12);
       transition:transform 0.15s, border-color 0.15s, box-shadow 0.15s;
       touch-action:manipulation;
-      aspect-ratio: 3/4;
+      aspect-ratio: 4/3;
       display:flex; flex-direction:column;
     }
-    .game-card:active { transform:scale(0.94); }
+    .game-card:active { transform:scale(0.94); border-color:rgba(0,200,255,.8); }
 
     /* Couleur par jeu */
     .game-card[data-id="sonic1"]    { --c1:#0044ff; --c2:#00aaff; }
@@ -109,55 +109,60 @@
     .game-card[data-id="triple"]    { --c1:#8800ff; --c2:#ff00cc; }
     .game-card[data-id="ecco"]      { --c1:#00668b; --c2:#00eeff; }
     .game-card[data-id="streets"]   { --c1:#aa0000; --c2:#ff4400; }
+    .game-card[data-id="soccer"]    { --c1:#0a7a2a; --c2:#7aff00; }
 
     .game-card-art {
       flex:1;
       background: linear-gradient(135deg, var(--c1), var(--c2));
       display:flex; align-items:center; justify-content:center;
-      font-size:clamp(44px,12vw,64px);
+      font-size:clamp(36px,10vw,52px);
       position:relative;
       overflow:hidden;
     }
-    .game-card-art::before {
-      content:'';
+    /* Vignette = capture d'écran du jeu (couvre l'emoji si présente) */
+    .game-card-art .thumb {
       position:absolute; inset:0;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 60%);
+      width:100%; height:100%;
+      object-fit:cover;
+      image-rendering:pixelated;   /* net pour le pixel-art */
+      z-index:1;
     }
+    .game-card-art .emoji { position:relative; z-index:0; }
     .game-card-art::after {
       content:'';
-      position:absolute; bottom:0; left:0; right:0; height:40%;
-      background:linear-gradient(transparent, rgba(0,0,0,0.5));
+      position:absolute; bottom:0; left:0; right:0; height:45%;
+      background:linear-gradient(transparent, rgba(0,0,0,0.65));
+      z-index:2;
     }
 
     .game-card-info {
-      padding:10px 10px 12px;
-      background:rgba(0,0,0,0.6);
-      backdrop-filter:blur(4px);
+      padding:7px 8px 9px;
+      background:rgba(0,0,0,0.72);
     }
     .game-card-title {
-      font-size:clamp(10px,3vw,13px);
+      font-size:clamp(9px,2.6vw,12px);
       font-weight:900;
       color:#fff;
-      line-height:1.2;
-      letter-spacing:0.3px;
+      line-height:1.15;
+      letter-spacing:0.2px;
     }
     .game-card-system {
-      font-size:9px;
+      font-size:8px;
       color:rgba(255,255,255,0.45);
-      margin-top:3px;
+      margin-top:2px;
       letter-spacing:1px;
       text-transform:uppercase;
     }
 
     .play-badge {
-      position:absolute; top:8px; right:8px; z-index:2;
-      width:28px; height:28px;
+      position:absolute; top:6px; right:6px; z-index:3;
+      width:24px; height:24px;
       border-radius:50%;
-      background:rgba(0,0,0,0.5);
-      border:1.5px solid rgba(255,255,255,0.3);
+      background:rgba(0,0,0,0.55);
+      border:1.5px solid rgba(255,255,255,0.4);
       display:flex; align-items:center; justify-content:center;
-      font-size:11px;
-      color:rgba(255,255,255,0.7);
+      font-size:10px;
+      color:rgba(255,255,255,0.85);
     }
 
     /* ══════════════════════════════
@@ -312,8 +317,71 @@
       background:rgba(255,80,80,.55); color:#fff; transform:scale(.9);
       box-shadow:0 0 22px rgba(255,80,80,.7);
     }
-    /* Masquer la manette tactile NATIVE d'EmulatorJS (on garde la nôtre) */
-    .ejs_virtualGamepad_parent { display:none !important; }
+    /* Masquer la manette ET le menu NATIFS d'EmulatorJS (protégé enfant) */
+    .ejs_virtualGamepad_parent,
+    .ejs_menu_bar,
+    .ejs_menu_button,
+    .ejs_context_menu { display:none !important; }
+
+    /* Bouton Réglages dans le menu principal */
+    #settings-btn {
+      position:relative; z-index:1;
+      margin: 4px auto 24px;
+      padding:10px 24px; border-radius:22px;
+      background:rgba(0,80,200,.35); border:2px solid rgba(0,160,255,.5);
+      color:#cfe8ff; font-size:13px; font-weight:800; letter-spacing:1px;
+      cursor:pointer; font-family:inherit;
+    }
+    #settings-btn:active { transform:scale(.95); }
+
+    /* Panneau Réglages */
+    #settings-panel {
+      position:fixed; inset:0; z-index:150;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,12,.85); backdrop-filter:blur(6px);
+      padding:20px;
+    }
+    #settings-panel.hidden { display:none; }
+    .settings-box {
+      background:linear-gradient(160deg,#0a1c44,#06122e);
+      border:2px solid rgba(0,160,255,.5);
+      border-radius:20px;
+      padding:24px; max-width:340px; width:100%;
+      text-align:center;
+      box-shadow:0 0 50px rgba(0,120,255,.4);
+    }
+    .settings-title {
+      font-size:22px; font-weight:900; color:#FFD700;
+      text-shadow:0 0 12px #ffd700; margin-bottom:20px;
+    }
+    .settings-section { margin-bottom:20px; }
+    .settings-label {
+      font-size:14px; font-weight:800; color:#fff; margin-bottom:12px;
+    }
+    #qr-code {
+      width:200px; height:200px; margin:0 auto;
+      background:#fff; border-radius:12px; padding:10px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    #qr-code img, #qr-code canvas { width:100%; height:100%; }
+    .settings-hint {
+      font-size:11px; color:rgba(255,255,255,.55);
+      margin-top:10px; line-height:1.4;
+    }
+    #settings-close {
+      padding:12px 32px; border-radius:24px;
+      background:rgba(0,200,80,.3); border:2px solid rgba(0,230,100,.7);
+      color:#fff; font-size:14px; font-weight:900; letter-spacing:1px;
+      cursor:pointer; font-family:inherit;
+    }
+    #settings-close:active { transform:scale(.95); }
+
+    /* Iframe pour les jeux HTML autonomes (Sensible Soccer) */
+    #soccer-frame {
+      position:absolute; inset:0;
+      width:100%; height:100%; border:0;
+      background:#000; z-index:5;
+    }
 
     #fs-btn {
       position:absolute; top:8px; right:12px; z-index:50;
@@ -403,8 +471,8 @@
 
   <div class="games-grid">
 
-    <div class="game-card" data-id="sonic1" data-rom="rom/Sonic the Hedgehog.gg" data-title="Sonic the Hedgehog">
-      <div class="game-card-art">🦔</div>
+    <div class="game-card" data-id="sonic1">
+      <div class="game-card-art"><img class="thumb" src="thumb/sonic1.png" alt="" onerror="this.style.display='none'"><span class="emoji">🦔</span></div>
       <div class="play-badge">▶</div>
       <div class="game-card-info">
         <div class="game-card-title">Sonic the Hedgehog</div>
@@ -412,8 +480,8 @@
       </div>
     </div>
 
-    <div class="game-card" data-id="sonic2" data-rom="rom/Sonic the Hedgehog 2.gg" data-title="Sonic the Hedgehog 2">
-      <div class="game-card-art">⚡</div>
+    <div class="game-card" data-id="sonic2">
+      <div class="game-card-art"><img class="thumb" src="thumb/sonic2.png" alt="" onerror="this.style.display='none'"><span class="emoji">⚡</span></div>
       <div class="play-badge">▶</div>
       <div class="game-card-info">
         <div class="game-card-title">Sonic the Hedgehog 2</div>
@@ -421,8 +489,8 @@
       </div>
     </div>
 
-    <div class="game-card" data-id="triple" data-rom="rom/Sonic the Hedgehog - Triple Trouble.gg" data-title="Sonic Triple Trouble">
-      <div class="game-card-art">🌀</div>
+    <div class="game-card" data-id="triple">
+      <div class="game-card-art"><img class="thumb" src="thumb/triple.png" alt="" onerror="this.style.display='none'"><span class="emoji">🌀</span></div>
       <div class="play-badge">▶</div>
       <div class="game-card-info">
         <div class="game-card-title">Sonic Triple Trouble</div>
@@ -430,8 +498,8 @@
       </div>
     </div>
 
-    <div class="game-card" data-id="ecco" data-rom="rom/Ecco the Dolphin 2 - Tthe Tides of Time.gg" data-title="Ecco the Dolphin 2">
-      <div class="game-card-art">🐬</div>
+    <div class="game-card" data-id="ecco">
+      <div class="game-card-art"><img class="thumb" src="thumb/ecco.png" alt="" onerror="this.style.display='none'"><span class="emoji">🐬</span></div>
       <div class="play-badge">▶</div>
       <div class="game-card-info">
         <div class="game-card-title">Ecco the Dolphin 2</div>
@@ -439,8 +507,8 @@
       </div>
     </div>
 
-    <div class="game-card" data-id="streets" data-rom="rom/Streets of Rage 2.gg" data-title="Streets of Rage 2">
-      <div class="game-card-art">👊</div>
+    <div class="game-card" data-id="streets">
+      <div class="game-card-art"><img class="thumb" src="thumb/streets.png" alt="" onerror="this.style.display='none'"><span class="emoji">👊</span></div>
       <div class="play-badge">▶</div>
       <div class="game-card-info">
         <div class="game-card-title">Streets of Rage 2</div>
@@ -448,6 +516,35 @@
       </div>
     </div>
 
+    <div class="game-card" data-id="soccer">
+      <div class="game-card-art"><img class="thumb" src="thumb/soccer.png" alt="" onerror="this.style.display='none'"><span class="emoji">⚽</span></div>
+      <div class="play-badge">▶</div>
+      <div class="game-card-info">
+        <div class="game-card-title">Sensible Soccer</div>
+        <div class="game-card-system">Megadrive • 1992</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bouton Réglages -->
+  <button id="settings-btn">⚙️ Réglages</button>
+</div>
+
+<!-- ══════════════════════════════
+     PANNEAU RÉGLAGES
+══════════════════════════════ -->
+<div id="settings-panel" class="hidden">
+  <div class="settings-box">
+    <div class="settings-title">⚙️ Réglages</div>
+
+    <div class="settings-section">
+      <div class="settings-label">📲 Partager avec tes amis</div>
+      <div id="qr-code"></div>
+      <div class="settings-hint">Scanne ce QR code pour ouvrir le jeu d'Élio</div>
+    </div>
+
+    <button id="settings-close">✓ Fermer</button>
   </div>
 </div>
 
@@ -504,6 +601,7 @@ const GAMES = {
   triple:  { rom:'rom/Sonic the Hedgehog - Triple Trouble.gg',      title:'Sonic Triple Trouble' },
   ecco:    { rom:'rom/Ecco the Dolphin 2 - Tthe Tides of Time.gg',  title:'Ecco the Dolphin 2' },
   streets: { rom:'rom/Streets of Rage 2.gg',                        title:'Streets of Rage 2' },
+  soccer:  { html:'sensible-soccer.html',                           title:'Sensible Soccer' },
 };
 
 const menu    = document.getElementById('menu');
@@ -527,6 +625,19 @@ function bootFromUrl() {
   menu.style.display = 'none';
   app.classList.add('visible');
   titleBar.textContent = game.title;
+
+  // Jeu HTML autonome (Sensible Soccer) → iframe plein écran, pas de manette
+  if (game.html) {
+    document.getElementById('ctrl').style.display = 'none';
+    document.getElementById('fs-btn').style.display = 'none';
+    document.getElementById('game-tap').style.display = 'none';
+    const frame = document.createElement('iframe');
+    frame.id = 'soccer-frame';
+    frame.src = game.html;
+    frame.allow = 'autoplay; fullscreen; gamepad';
+    document.getElementById('emu-wrapper').appendChild(frame);
+    return;
+  }
 
   // Configurer et charger EmulatorJS
   window.EJS_core    = 'smsplus';
@@ -689,6 +800,37 @@ document.getElementById('fs-btn').addEventListener('click', ()=>{
   if(!document.fullscreenElement) el.requestFullscreen?.() || el.webkitRequestFullscreen?.();
   else document.exitFullscreen?.() || document.webkitExitFullscreen?.();
 });
+
+// ── Panneau Réglages + QR code de partage ───────────────────────
+const settingsPanel = document.getElementById('settings-panel');
+const settingsBtn   = document.getElementById('settings-btn');
+const settingsClose = document.getElementById('settings-close');
+let   qrDone = false;
+
+function openSettings() {
+  settingsPanel.classList.remove('hidden');
+  if (!qrDone) { buildQR(); qrDone = true; }
+}
+function closeSettings() { settingsPanel.classList.add('hidden'); }
+
+settingsBtn?.addEventListener('click', openSettings);
+settingsClose?.addEventListener('click', closeSettings);
+settingsPanel?.addEventListener('click', e => { if (e.target === settingsPanel) closeSettings(); });
+
+function buildQR() {
+  // URL de l'app sans paramètre de jeu
+  const shareUrl = location.origin + location.pathname;
+  const box = document.getElementById('qr-code');
+  // Service de génération de QR (en ligne) avec fallback
+  const img = document.createElement('img');
+  img.alt = 'QR code de partage';
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(shareUrl);
+  img.onerror = () => {
+    box.innerHTML = '<div style="color:#06122e;font-size:11px;padding:10px;word-break:break-all">' + shareUrl + '</div>';
+  };
+  box.innerHTML = '';
+  box.appendChild(img);
+}
 
 // ── PWA : enregistrement du service worker (installation téléphone) ──
 if ('serviceWorker' in navigator) {
